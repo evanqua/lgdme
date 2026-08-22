@@ -4,6 +4,8 @@ This is a full walkthrough for standing up your own instance of the LgDME System
 
 Read the whole document once before starting. A few decisions (which Google account to use, whether you need Google Workspace) are much easier to make before you have live data than after.
 
+If you want to see a real, deployed instance before starting, [ReCARES](https://recares.org) (the organization that sponsored this project) runs its own production instance at [script.google.com/a/recares.org/macros/s/AKfycbyC3RX01ff9HI_jRCdj3TGWT5k6Y7yjNMArB3W-rH85DGi0kwb5RcSyiLbziTw6bmGV/exec](https://script.google.com/a/recares.org/macros/s/AKfycbyC3RX01ff9HI_jRCdj3TGWT5k6Y7yjNMArB3W-rH85DGi0kwb5RcSyiLbziTw6bmGV/exec). It is a live system serving real submitters, not a sandbox, so please do not submit test listings there; use your own instance once you get to step 13 below.
+
 ## Contents
 
 1. [What you need before you start](#1-what-you-need-before-you-start)

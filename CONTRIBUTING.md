@@ -30,7 +30,7 @@ This project has no build step and no npm dependencies in the deployed code. Dev
 4. Push it to your own test project with `clasp push --force`, and exercise it manually, either from the Apps Script editor's function dropdown for a single function, or through the deployed Web App for anything touching the UI, routing, or email.
 5. Run the local unit test suite (see below) before opening a pull request.
 
-There is no CI pipeline in this repository at present. A pull request is verified by review and by the checks in the sections above.
+A GitHub Actions workflow (`.github/workflows/test.yml`) runs `npm test` automatically on every push and pull request against `main`, and its status shows as the "Tests" badge on the README. This only runs the local logic suite described in section 3 below; it does not, and cannot, exercise a real Spreadsheet or Web App deployment, so it is not a substitute for the manual verification in section 2.
 
 ## 3. Running the test suite
 
