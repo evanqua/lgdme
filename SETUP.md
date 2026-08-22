@@ -48,10 +48,43 @@ If you decide to migrate later, moving to a new account means recreating the App
 
 ## 3. Clone the repo
 
+Before you clone, decide whether you want to keep receiving future updates from this project (bug fixes, new features) with a simple `git merge` later, rather than manually copying changes over by hand. Three options, in order of how much future-update convenience you get:
+
+**Just want to try it, no plan to track updates:**
 ```
 git clone https://github.com/evanqua/lgdme.git
 cd lgdme
 ```
+Simplest option. `origin` points at this repo directly, but since you will not have push access to it, this is a dead end for pulling structured updates later; you would need to `git pull` (which only works cleanly if you never diverge) or re-clone.
+
+**Public fork, and you are fine with your configured instance's repo also being public** (or you plan to contribute back):
+
+Use GitHub's Fork button on this repo, or from the command line with [GitHub's `gh` CLI](https://cli.github.com/):
+```
+gh repo fork evanqua/lgdme --clone
+cd lgdme
+```
+This creates a full copy under your own GitHub account with its complete git history preserved, clones it locally, and automatically sets up two remotes: `origin` (your fork, which you can push your own organization's config and customizations to) and `upstream` (this original repo). Pull in new releases at any time with:
+```
+git fetch upstream
+git merge upstream/main
+```
+
+**Private downstream copy, if you want your organization's real configuration, legal text, or category list to stay private** (this is the path ReCARES's own production instance uses):
+
+A plain GitHub fork of a public repo is public too, so this path needs one extra step instead of the Fork button. Clone this repo without its history, push that as a fresh initial commit to your own new private repo, then add this repo back as a remote for pulling future updates:
+```
+git clone --depth 1 https://github.com/evanqua/lgdme.git
+cd lgdme
+rm -rf .git
+git init
+git add .
+git commit -m "Initial commit from evanqua/lgdme"
+git remote add origin <your new private repo's URL>
+git push -u origin main
+git remote add upstream https://github.com/evanqua/lgdme.git
+```
+From here on, pulling in a future update is the same `git fetch upstream && git merge upstream/main` as the fork path above. The first merge needs `git merge --allow-unrelated-histories upstream/main`, since dropping `.git` above means your repo's history has no common ancestor with this one yet; every merge after that first one is a normal merge. Expect a conflict on any file you have customized (your `Config.js` defaults, `SiteConfig.js`'s lists, `IntakeForm.html`'s consent text); resolve those with `git checkout --ours <file>` to keep your own version, and look closely at anything else that conflicts before picking a side.
 
 ## 4. Create your Apps Script project and Spreadsheet
 

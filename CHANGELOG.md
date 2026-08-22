@@ -16,6 +16,12 @@ in the README for how versions map to git tags and Apps Script deployments.
 ## [Unreleased]
 
 ### Added
+- `SETUP.md` section 3 now documents three ways to get the code, ordered by
+  how well future updates can be pulled in later: a plain clone, a public
+  GitHub fork (with `origin`/`upstream` remotes set up automatically via
+  `gh repo fork`), or a private downstream copy that still tracks `upstream`
+  for updates, matching the pattern ReCARES's own production deployment
+  uses.
 - `.github/FUNDING.yml` pointing to recares.org, so GitHub shows a Sponsor
   button on the repo.
 - Issue templates for bug reports and feature requests, and a pull request
