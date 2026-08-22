@@ -1,0 +1,7 @@
+# Local-only, never pushed to Apps Script — see CLAUDE.md/README.md.
+tools/**
+data/**
+*.csv
+node_modules/**
+.git/**
+.claude/**

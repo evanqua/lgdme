@@ -1,0 +1,17 @@
+node_modules/
+
+# Local exports of real Sheet data — must never enter git history
+*.csv
+*.xlsx
+*.xls
+export*.json
+data/
+
+*.log
+.DS_Store
+.env
+.env.*
+
+# Apps Script project binding — contains your instance's real scriptId/parentId.
+# Never commit this; see .clasp.json.example and SETUP.md for how to create your own.
+.clasp.json

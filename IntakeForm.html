@@ -1,0 +1,315 @@
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px 48px; color: #222; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  p.subtitle { color: #555; margin-top: 0; }
+  a.back-link { display: inline-block; margin-bottom: 12px; color: #205ea8; font-size: 0.9rem; text-decoration: none; }
+  a.back-link:hover { text-decoration: underline; }
+  fieldset { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 18px; padding: 12px 16px 16px; }
+  legend { font-weight: 600; padding: 0 6px; }
+  .field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+  label { font-weight: 600; font-size: 0.9rem; }
+  .item-descriptor { font-size: 0.85rem; color: #555; margin: 4px 0 0; display: none; }
+  .item-descriptor a { color: #205ea8; }
+  input[type=text], input[type=email], input[type=tel], select, textarea {
+    padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: inherit;
+  }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .checkbox-row input { margin-top: 4px; }
+  .checkbox-row label { font-weight: normal; }
+  .placeholder-warning { background: #fff3cd; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-bottom: 10px; }
+  .consent-text p { font-size: 0.9rem; color: #444; margin: 0 0 10px; }
+  .consent-text p:last-child { margin-bottom: 0; }
+  #status { margin-top: 16px; padding: 10px; border-radius: 4px; display: none; }
+  #status.visible { display: block; background: #e8f4ea; color: #1e5c2a; }
+  #status.visible.error { background: #fdecea; color: #a12622; }
+  button { padding: 10px 22px; font-size: 1rem; border: none; border-radius: 4px; background: #4A90E2; color: white; cursor: pointer; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .success-screen { display: none; text-align: center; padding: 56px 16px; }
+  .success-check { width: 80px; height: 80px; border-radius: 50%; background: #2e7d32; color: #fff; font-size: 2.75rem; line-height: 80px; margin: 0 auto 20px; }
+  .success-screen p { color: #555; margin-bottom: 24px; }
+  .success-screen a.home-btn { display: inline-block; padding: 10px 24px; background: #4A90E2; color: #fff; border-radius: 4px; text-decoration: none; font-weight: 600; }
+</style>
+
+<div id="formHeader">
+  <a class="back-link" id="backLink" href="#" target="_top">&larr; Back to home</a>
+
+  <h1><?= getOrgName() ?></h1>
+  <p class="subtitle">Submit a listing to donate or request durable medical equipment.</p>
+</div>
+
+<div class="success-screen" id="successScreen">
+  <div class="success-check">&#10003;</div>
+  <h1>Submitted!</h1>
+  <p id="successMessage"></p>
+  <a class="home-btn" id="successHomeLink" href="#" target="_top">Back to main menu</a>
+</div>
+
+<form id="intakeForm">
+  <fieldset>
+    <legend>What would you like to do?</legend>
+    <div class="checkbox-row"><input type="radio" name="donate_or_receive" value="Donate" id="dir_donate" required><label for="dir_donate">Donate an item</label></div>
+    <div class="checkbox-row"><input type="radio" name="donate_or_receive" value="Receive" id="dir_receive"><label for="dir_receive">Receive an item</label></div>
+  </fieldset>
+
+  <div class="field">
+    <label for="item_type">Item type *</label>
+    <select name="item_type" id="item_type" required>
+      <option value="">-- Select --</option>
+    </select>
+    <p class="item-descriptor" id="itemDescriptor"></p>
+  </div>
+
+  <div id="dynamicFields"></div>
+
+  <fieldset>
+    <legend>Your info</legend>
+    <div class="field"><label for="first_name">First name *</label><input type="text" name="first_name" id="first_name" required></div>
+    <div class="field"><label for="last_name">Last name (not shared)</label><input type="text" name="last_name" id="last_name"></div>
+    <div class="field"><label for="email">Email *</label><input type="email" name="email" id="email" required></div>
+    <div class="field">
+      <label for="city_select">City *</label>
+      <select id="city_select" required><option value="">-- Select --</option></select>
+    </div>
+    <div class="field" id="cityOtherField" style="display:none;">
+      <label for="city_other">City (please specify) *</label>
+      <input type="text" id="city_other">
+    </div>
+    <input type="hidden" name="city" id="city">
+    <div class="field"><label for="phone">Phone number *</label><input type="tel" name="phone" id="phone" required></div>
+    <div class="checkbox-row">
+      <input type="checkbox" name="phone_share_consent" id="phone_share_consent">
+      <label for="phone_share_consent">I permit <?= getOrgName() ?> to share my phone number with potential matches</label>
+    </div>
+  </fieldset>
+
+  <fieldset id="photoFieldset">
+    <legend>Photo (optional)</legend>
+    <input type="file" name="photo" id="photo" accept="image/*" multiple>
+  </fieldset>
+
+  <fieldset>
+    <legend>Notifications</legend>
+    <div class="checkbox-row">
+      <input type="checkbox" name="notification_consent" id="notification_consent">
+      <label for="notification_consent">[RECOMMENDED] Yes, notify me by email about new matches (expires after <?= expirationDays ?> days. You can resubmit to renew)</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Consent / waiver</legend>
+    <div class="consent-text">
+      <p class="placeholder-warning"><strong>REPLACE THIS TEXT.</strong> This is placeholder consent/waiver language only —
+      every organization running this system needs its own reviewed legal text here covering at
+      minimum: what information gets shared with a match, who else can see submissions, and what
+      liability the organization does or doesn't assume for the condition of exchanged equipment.
+      Do not deploy this to real users without replacing this paragraph.</p>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" name="consent_agreed" id="consent_agreed" required>
+      <label for="consent_agreed">I have read and agree to the terms above *</label>
+    </div>
+  </fieldset>
+
+  <button type="submit" id="submitBtn">Submit</button>
+  <div id="status"></div>
+</form>
+
+<script>
+  const ITEM_CONFIG = <?!= itemConfigJson ?>;
+  const PREFILL = <?!= prefillJson ?>;
+  const SERVICE_CITIES = <?!= serviceCitiesJson ?>; // SiteConfig.js
+  const HOME_URL = <?!= homeUrlJson ?>;
+
+  document.getElementById('backLink').href = HOME_URL;
+  document.getElementById('successHomeLink').href = HOME_URL;
+
+  const itemTypeSelect = document.getElementById('item_type');
+  const dynamicFields = document.getElementById('dynamicFields');
+  const directionRadios = Array.from(document.getElementsByName('donate_or_receive'));
+
+  const citySelect = document.getElementById('city_select');
+  const cityOtherField = document.getElementById('cityOtherField');
+  const cityOtherInput = document.getElementById('city_other');
+  const cityHiddenInput = document.getElementById('city');
+  const OTHER_CITY_VALUE = '__other__';
+
+  function populateCities() {
+    SERVICE_CITIES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      citySelect.appendChild(opt);
+    });
+    const otherOpt = document.createElement('option');
+    otherOpt.value = OTHER_CITY_VALUE;
+    otherOpt.textContent = 'Other';
+    citySelect.appendChild(otherOpt);
+  }
+
+  citySelect.addEventListener('change', function () {
+    const isOther = citySelect.value === OTHER_CITY_VALUE;
+    cityOtherField.style.display = isOther ? 'flex' : 'none';
+    cityOtherInput.required = isOther;
+  });
+
+  function syncCityValue() {
+    cityHiddenInput.value = citySelect.value === OTHER_CITY_VALUE ? cityOtherInput.value : citySelect.value;
+  }
+
+  function populateItemTypes() {
+    const types = Object.keys(ITEM_CONFIG).sort((a, b) => {
+      if (a === 'Miscellaneous Large DME') return 1;
+      if (b === 'Miscellaneous Large DME') return -1;
+      return a.localeCompare(b);
+    });
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      itemTypeSelect.appendChild(opt);
+    });
+  }
+
+  function currentDirection() {
+    const checked = directionRadios.find(r => r.checked);
+    return checked ? checked.value : null;
+  }
+
+  const photoFieldset = document.getElementById('photoFieldset');
+  const photoInput = document.getElementById('photo');
+
+  // Only donors have an item in hand to photograph — hide (and clear, in
+  // case someone picked a photo before switching direction) for Receive.
+  function updatePhotoVisibility() {
+    const isDonate = currentDirection() === 'Donate';
+    photoFieldset.style.display = isDonate ? 'block' : 'none';
+    if (!isDonate) photoInput.value = '';
+  }
+
+  function renderDynamicFields() {
+    dynamicFields.innerHTML = '';
+    const itemType = itemTypeSelect.value;
+    const direction = currentDirection();
+    if (!itemType || !direction) return;
+    const config = ITEM_CONFIG[itemType];
+    if (!config) return;
+    const fields = direction === 'Donate' ? config.donate : config.receive;
+
+    fields.forEach(f => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'field';
+
+      const label = document.createElement('label');
+      label.textContent = f.label + (f.required ? ' *' : '');
+      label.setAttribute('for', 'field__' + f.id);
+      wrapper.appendChild(label);
+
+      let input;
+      if (f.type === 'select') {
+        input = document.createElement('select');
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '-- Select --';
+        input.appendChild(blank);
+        f.options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o;
+          opt.textContent = o;
+          input.appendChild(opt);
+        });
+      } else if (f.type === 'textarea') {
+        input = document.createElement('textarea');
+        input.rows = 3;
+      } else {
+        input = document.createElement('input');
+        input.type = 'text';
+      }
+      input.name = 'field__' + f.id;
+      input.id = 'field__' + f.id;
+      if (f.required) input.required = true;
+
+      wrapper.appendChild(input);
+      dynamicFields.appendChild(wrapper);
+    });
+  }
+
+  const itemDescriptor = document.getElementById('itemDescriptor');
+
+  function updateItemDescriptor() {
+    const config = ITEM_CONFIG[itemTypeSelect.value];
+    if (config && config.description) {
+      itemDescriptor.innerHTML = config.description;
+      itemDescriptor.style.display = 'block';
+    } else {
+      itemDescriptor.innerHTML = '';
+      itemDescriptor.style.display = 'none';
+    }
+  }
+
+  itemTypeSelect.addEventListener('change', renderDynamicFields);
+  itemTypeSelect.addEventListener('change', updateItemDescriptor);
+  directionRadios.forEach(r => r.addEventListener('change', renderDynamicFields));
+  directionRadios.forEach(r => r.addEventListener('change', updatePhotoVisibility));
+  populateItemTypes();
+  populateCities();
+  applyPrefill();
+  updatePhotoVisibility();
+
+  // Arriving from the home page's category CTAs (?view=intake&donate_or_receive=...&item_type=...&notify=1) —
+  // pre-select what the visitor already told us there so they don't repeat themselves.
+  function applyPrefill() {
+    if (PREFILL.direction === 'Donate' || PREFILL.direction === 'Receive') {
+      const radio = document.getElementById(PREFILL.direction === 'Donate' ? 'dir_donate' : 'dir_receive');
+      if (radio) radio.checked = true;
+    }
+    if (PREFILL.itemType && ITEM_CONFIG[PREFILL.itemType]) {
+      itemTypeSelect.value = PREFILL.itemType;
+    }
+    if (PREFILL.direction || PREFILL.itemType) renderDynamicFields();
+    updateItemDescriptor();
+    if (PREFILL.notify) {
+      const notifyCheckbox = document.getElementById('notification_consent');
+      if (notifyCheckbox) notifyCheckbox.checked = true;
+    }
+  }
+
+  const form = document.getElementById('intakeForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('status');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    syncCityValue();
+    submitBtn.disabled = true;
+    setStatus('Submitting…', false);
+    google.script.run
+      .withSuccessHandler(onSubmitSuccess)
+      .withFailureHandler(onSubmitFailure)
+      .submitIntake(form);
+  });
+
+  function onSubmitSuccess(result) {
+    submitBtn.disabled = false;
+    if (!result.success) {
+      setStatus('Please fix the following:<br>' + result.errors.join('<br>'), true);
+      return;
+    }
+    document.getElementById('formHeader').style.display = 'none';
+    form.style.display = 'none';
+    document.getElementById('successMessage').textContent = result.matchCount > 0
+      ? `We found ${result.matchCount} current match(es) — check your email.`
+      : 'We will email you if a match appears.';
+    document.getElementById('successScreen').style.display = 'block';
+  }
+
+  function onSubmitFailure(err) {
+    submitBtn.disabled = false;
+    const message = (err && (err.message || err.name)) || JSON.stringify(err) || String(err);
+    setStatus('Something went wrong: ' + message + '. Check View → Executions in the Apps Script editor for details.', true);
+  }
+
+  function setStatus(html, isError) {
+    statusEl.innerHTML = html;
+    statusEl.className = 'visible' + (isError ? ' error' : '');
+  }
+</script>

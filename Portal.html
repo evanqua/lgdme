@@ -1,0 +1,187 @@
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px 48px; color: #222; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; margin-top: 0; }
+  p.subtitle { color: #555; margin-top: 0; }
+  .card { border: 1px solid #ddd; border-radius: 6px; padding: 12px 16px 16px; margin-bottom: 18px; }
+  fieldset { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 18px; padding: 12px 16px 16px; }
+  legend { font-weight: 600; padding: 0 6px; }
+  label { font-weight: 600; font-size: 0.9rem; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; }
+  .checkbox-row input { margin-top: 4px; }
+  .checkbox-row label { font-weight: normal; }
+  select, textarea { padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+  button { padding: 10px 22px; font-size: 1rem; border: none; border-radius: 4px; background: #4A90E2; color: white; cursor: pointer; margin-right: 8px; }
+  button.secondary { background: #888; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .placeholder-warning { background: #fff3cd; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-bottom: 10px; }
+  #status { margin-top: 16px; padding: 10px; border-radius: 4px; display: none; }
+  #status.visible { display: block; background: #e8f4ea; color: #1e5c2a; }
+  #status.visible.error { background: #fdecea; color: #a12622; }
+</style>
+
+<div id="notFound" style="display:none;">
+  <h1>Link not found</h1>
+  <p>This link isn't valid, or the listing it points to no longer exists. If you think this is a mistake, contact <a href="mailto:<?= getContactEmail() ?>"><?= getContactEmail() ?></a>.</p>
+</div>
+
+<div id="portal" style="display:none;">
+  <h1><?= getOrgName() ?></h1>
+  <p class="subtitle">Your listing: <span id="itemLabel"></span></p>
+
+  <div class="card" id="staleCard" style="display:none;">
+    <h2>Still looking?</h2>
+    <p>This listing has been active for <span id="ageInDays"></span> days.</p>
+    <button id="stillLookingYes">Yes, still looking</button>
+    <button class="secondary" id="stillLookingNo">No — I'd like to remove it</button>
+  </div>
+
+  <div class="card" id="receiveCard" style="display:none;">
+    <h2>Confirm receipt</h2>
+    <div class="placeholder-warning">
+      PLACEHOLDER — the receipt emailed after confirming does not yet have final wording. See code comments in Receipts.js.
+    </div>
+    <label for="receiptMatchSelect">Which listing did you receive this from?</label>
+    <select id="receiptMatchSelect"><option value="">-- Select --</option></select>
+    <button id="confirmReceiptBtn">Confirm receipt</button>
+  </div>
+
+  <fieldset id="feedbackFieldset">
+    <legend>Feedback (optional)</legend>
+    <p style="font-size:0.85rem;color:#555;margin-top:0;">
+      Sharing feedback is completely optional and won't affect your listing or match status either
+      way. Feedback is reviewed internally to help us improve the program.
+    </p>
+    <label for="feedback">Any feedback on the <?= getOrgName() ?> Large DME Referral system?</label>
+    <textarea id="feedback" rows="3"></textarea>
+  </fieldset>
+
+  <div class="card" id="outcomeCard">
+    <h2>Report match outcome</h2>
+    <label for="outcomeMatchSelect">Who did you actually match with?</label>
+    <select id="outcomeMatchSelect"><option value="">-- Select --</option></select>
+    <button id="reportOutcomeBtn">Mark as matched / opt out</button>
+    <button class="secondary" id="reportNoMatchBtn">I did not match with anyone</button>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  const DATA = <?!= portalDataJson ?>;
+
+  if (!DATA.found) {
+    document.getElementById('notFound').style.display = 'block';
+  } else {
+    document.getElementById('portal').style.display = 'block';
+    document.getElementById('itemLabel').textContent = DATA.itemLabel;
+    document.getElementById('ageInDays').textContent = DATA.ageInDays;
+
+    if (DATA.isStale) document.getElementById('staleCard').style.display = 'block';
+    if (!DATA.directionIsDonate) document.getElementById('receiveCard').style.display = 'block';
+
+    const receiptSelect = document.getElementById('receiptMatchSelect');
+    const outcomeSelect = document.getElementById('outcomeMatchSelect');
+    DATA.notifiedParties.forEach(function (p) {
+      [receiptSelect, outcomeSelect].forEach(function (sel) {
+        const opt = document.createElement('option');
+        opt.value = p.submissionId;
+        opt.textContent = p.label;
+        sel.appendChild(opt);
+      });
+    });
+    // Only the "who did you match with" outcome dropdown offers this — a
+    // receipt needs a specific, known donor, so there's no sensible "not
+    // sure" answer there.
+    const unsureOpt = document.createElement('option');
+    unsureOpt.value = '__unsure__';
+    unsureOpt.textContent = "Not sure / don't remember";
+    outcomeSelect.appendChild(unsureOpt);
+
+    function setStatus(html, isError) {
+      const el = document.getElementById('status');
+      el.innerHTML = html;
+      el.className = 'visible' + (isError ? ' error' : '');
+    }
+
+    // Read once at the moment a closing action is taken (report outcome,
+    // report no-match, confirm receipt) — the single feedback fieldset above
+    // applies to whichever of those actually closes out the listing.
+    function currentFeedback() {
+      return {
+        feedback: document.getElementById('feedback').value
+      };
+    }
+
+    document.getElementById('stillLookingYes').addEventListener('click', function () {
+      google.script.run
+        .withSuccessHandler(function () { setStatus('Thanks — your listing stays active.', false); })
+        .withFailureHandler(function (err) { setStatus('Error: ' + ((err && err.message) || err), true); })
+        .portalStaleResponse(DATA.token);
+    });
+    // No server call here — removing a listing always goes through the
+    // feedback + outcome cards below now (reportOutcomeBtn/reportNoMatchBtn)
+    // so we actually learn whether they matched, instead of opting out
+    // blind. Scrolls to the feedback fieldset first (it now comes before
+    // the outcome card) so feedback is what they see prompted first.
+    document.getElementById('stillLookingNo').addEventListener('click', function () {
+      setStatus("Please answer below whether you found a match before we remove your listing — it only takes a second and helps us a lot.", false);
+      document.getElementById('feedbackFieldset').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    const confirmBtn = document.getElementById('confirmReceiptBtn');
+    confirmBtn.addEventListener('click', function () {
+      const matchedId = receiptSelect.value;
+      if (!matchedId) { setStatus('Please select which listing you received this from.', true); return; }
+      const fb = currentFeedback();
+      confirmBtn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function (result) {
+          confirmBtn.disabled = false;
+          if (!result.success) { setStatus(result.error, true); return; }
+          setStatus('Receipt confirmed — a placeholder receipt PDF has been emailed to you.', false);
+        })
+        .withFailureHandler(function (err) {
+          confirmBtn.disabled = false;
+          setStatus('Error: ' + ((err && err.message) || err), true);
+        })
+        .portalConfirmReceipt(DATA.token, matchedId, fb.feedback);
+    });
+
+    const outcomeBtn = document.getElementById('reportOutcomeBtn');
+    outcomeBtn.addEventListener('click', function () {
+      const matchedId = outcomeSelect.value;
+      if (!matchedId) { setStatus('Please select who you matched with.', true); return; }
+      const fb = currentFeedback();
+      outcomeBtn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function (result) {
+          outcomeBtn.disabled = false;
+          if (!result.success) { setStatus(result.error, true); return; }
+          setStatus('Thanks — your listing has been updated.', false);
+        })
+        .withFailureHandler(function (err) {
+          outcomeBtn.disabled = false;
+          setStatus('Error: ' + ((err && err.message) || err), true);
+        })
+        .portalReportOutcome(DATA.token, matchedId, fb.feedback);
+    });
+
+    const noMatchBtn = document.getElementById('reportNoMatchBtn');
+    noMatchBtn.addEventListener('click', function () {
+      const fb = currentFeedback();
+      noMatchBtn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function (result) {
+          noMatchBtn.disabled = false;
+          if (!result.success) { setStatus(result.error, true); return; }
+          setStatus('Thanks for letting us know — your listing has been removed.', false);
+        })
+        .withFailureHandler(function (err) {
+          noMatchBtn.disabled = false;
+          setStatus('Error: ' + ((err && err.message) || err), true);
+        })
+        .portalReportNoMatch(DATA.token, fb.feedback);
+    });
+  }
+</script>

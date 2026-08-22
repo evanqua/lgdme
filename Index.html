@@ -1,0 +1,201 @@
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px 48px; color: #222; line-height: 1.5; }
+  h1 { font-size: 1.8rem; margin-bottom: 4px; }
+  h2 { font-size: 1.2rem; margin-top: 40px; margin-bottom: 8px; }
+  p.subtitle { color: #555; margin-top: 0; font-size: 1.05rem; }
+
+  .intro { background: #f7faff; border: 1px solid #dbe8fb; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+  .intro p { margin: 0 0 10px; }
+  .intro p:last-child { margin-bottom: 0; }
+
+  .intro-ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
+  .btn { display: inline-block; padding: 9px 20px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.92rem; border: 2px solid transparent; }
+  .btn-primary { background: #4A90E2; color: #fff; border-color: #4A90E2; }
+  .btn-primary:hover { background: #3a7bc8; border-color: #3a7bc8; }
+  .btn-secondary { background: transparent; color: #205ea8; border-color: #205ea8; }
+  .btn-secondary:hover { background: #eef5fd; }
+  .btn-donate { background: #2f9e44; color: #fff; border-color: #2f9e44; }
+  .btn-donate:hover { background: #268a39; border-color: #268a39; }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+  .steps li { border: 1px solid #eee; border-radius: 8px; padding: 14px 16px; }
+  .steps .step-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: #4A90E2; color: white; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; }
+  .steps .step-title { font-weight: 600; display: block; margin-bottom: 2px; }
+  .steps .step-desc { color: #555; font-size: 0.9rem; }
+
+  .stats-strip { margin: 48px 0 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+  .stat-row { display: flex; gap: 120px; flex-wrap: wrap; justify-content: center; }
+  .stat-item { display: flex; flex-direction: column; align-items: center; }
+  .stat-number { color: #4A90E2; font-size: 5rem; font-weight: 800; line-height: 1; }
+  .stat-label { color: #4A90E2; font-size: 0.9rem; font-weight: 600; margin-top: 8px; }
+  .stats-strip p { margin: 0; color: #444; font-size: 0.92rem; line-height: 1.5; max-width: 520px; }
+
+  @media (max-width: 480px) {
+    .stat-row { gap: 24px; }
+  }
+
+  .categories-footnote { color: #777; font-size: 0.85rem; margin: 0 0 8px; }
+
+  #categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 8px; }
+  .category-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .category-card-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .category-name { font-weight: 600; }
+  .badge-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+  .status-available { background: #e8f4ea; color: #1e5c2a; }
+  .status-none { background: #f0f0f0; color: #666; }
+  .demand-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; background: #fdeeea; color: #a13a1f; white-space: nowrap; }
+  .freshness { color: #777; font-size: 0.85rem; }
+  .category-search { width: 100%; padding: 9px 16px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 999px; margin: 8px 0 16px; box-sizing: border-box; font-family: inherit; }
+  .no-category-results { color: #777; font-size: 0.9rem; display: none; }
+  .card-actions { display: flex; gap: 8px; margin-top: auto; }
+  .card-actions .btn { flex: 1; text-align: center; }
+
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 0.8rem; color: #777; }
+  footer a { color: #205ea8; }
+
+  .receipt-notice { background: #fff8e6; border: 1px solid #f0dca0; border-radius: 8px; padding: 14px 20px; margin: 20px 0; font-size: 0.9rem; color: #6b5410; }
+  .receipt-notice strong { display: block; margin-bottom: 4px; }
+</style>
+
+<h1><?= getOrgName() ?></h1>
+<p class="subtitle">The <?= getOrgName() ?> Large DME (Durable Medical Equipment) System connects residents who are donating large durable medical equipment with residents who need it. There is no cost to participate, and no account is required to browse listings.</p>
+
+<div class="intro">
+  <p>
+    The <?= getOrgName() ?> matches donors and requesters of items such as hospital beds, wheelchairs, and stair lifts. To participate, submit a listing to donate or to request an item. When a match is found, both parties receive an email notification. No information is shared before a match occurs.
+  </p>
+  <p>
+    This is not a platform to buy or sell items, so all equipment must be exchanged free of charge. Matched donors and recipients may privately negotiate the cost of delivery or installation services between themselves.
+  </p>
+  <div class="intro-ctas">
+    <a class="btn btn-primary" id="introIntakeLink" href="#" target="_top">Sign up to donate or request an item</a>
+    <a class="btn btn-secondary" id="introOptOutLink" href="#" target="_top">Already have a listing? Remove it here</a>
+  </div>
+</div>
+
+<h2>How it works</h2>
+<ol class="steps">
+  <li><span class="step-num">1</span><span class="step-title">Submit a listing</span><span class="step-desc">Tell us what you're donating or looking for, and any other details you think might be helpful.</span></li>
+  <li><span class="step-num">2</span><span class="step-title">Receive matches</span><span class="step-desc">We will email you as soon as we find a matching listing. There is no need to make additional submissions.</span></li>
+  <li><span class="step-num">3</span><span class="step-title">Arrange privately</span><span class="step-desc">You and your match coordinate pickup or drop-off directly. This organization does not inspect, or handle items exchanged in the system.</span></li>
+</ol>
+
+<div class="receipt-notice">
+  <strong>Please note: <?= getOrgName() ?> cannot provide donation receipts for items exchanged through this system.</strong>
+  Because donated items go directly from the donor to the recipient, our organization never takes physical possession of, inspects, or otherwise verifies the item or the exchange. Under IRC &sect;170(f)(8), a charity can only issue a valid contemporaneous written acknowledgment (the document required to substantiate a tax-deductible noncash contribution) for property it has actually received. Because we never receive or control the equipment, we are not in a position to make that attestation, and cannot issue a tax-deductible receipt for these donations. Donors who need a receipt for tax purposes should discuss options directly with the recipient or a qualified tax advisor.
+</div>
+
+<div class="stats-strip" id="statsStrip">
+  <div class="stat-row">
+    <div class="stat-item">
+      <div class="stat-number" id="totalExchangesNumber"></div>
+      <div class="stat-label">Successful Exchanges</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="openRequestsNumber"></div>
+      <div class="stat-label">Active Requests</div>
+    </div>
+  </div>
+  <p>Over 85% of submissions find a match <strong>immediately</strong>. Many exchanges happen <strong>within 1 week</strong> of listing an item.</p>
+</div>
+
+<h2>Current categories</h2>
+<p class="categories-footnote" id="highDemandFootnote"></p>
+<input type="text" id="categorySearch" class="category-search" placeholder="Search categories…">
+<div id="categories"></div>
+<p class="no-category-results" id="noCategoryResults">No categories match your search.</p>
+
+<footer>
+  <p>
+    Interested in building a similar donation-matching system for your own organization? This
+    project is open source. See 
+    <a href="https://github.com/evanqua/lgdme" target="_blank" rel="noopener">github.com/evanqua/lgdme</a>.
+  </p>
+</footer>
+
+<script>
+  const DATA = <?!= homeDataJson ?>;
+
+  document.getElementById('introIntakeLink').href = DATA.introLinks.intakeUrl;
+  document.getElementById('introOptOutLink').href = DATA.introLinks.optOutUrl;
+
+  document.getElementById('totalExchangesNumber').textContent = DATA.totals.totalExchangesAllTime;
+  document.getElementById('openRequestsNumber').textContent = DATA.totals.openRequests;
+
+  document.getElementById('highDemandFootnote').textContent =
+    'Categories are marked "High Demand" once they reach ' + DATA.highDemandThreshold + ' or more active requests.';
+
+  // Sort order (No active listings first, then Available now) is decided
+  // server-side (HomeServer.js's categorySortRank) — DATA.categories arrives
+  // pre-sorted, this just renders it into the grid in that order.
+  const container = document.getElementById('categories');
+  DATA.categories.forEach(function (c) {
+    const isAvailable = c.status === 'Available now';
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    card.dataset.categoryName = c.category.toLowerCase();
+
+    const header = document.createElement('div');
+    header.className = 'category-card-header';
+    const name = document.createElement('span');
+    name.className = 'category-name';
+    name.textContent = c.category;
+    const badgeRow = document.createElement('div');
+    badgeRow.className = 'badge-row';
+    const badge = document.createElement('span');
+    badge.className = 'status-badge ' + (isAvailable ? 'status-available' : 'status-none');
+    badge.textContent = c.status;
+    badgeRow.appendChild(badge);
+    if (c.highDemand) {
+      // Boolean indicator only — no count is ever attached (see HomeServer.js).
+      const demandBadge = document.createElement('span');
+      demandBadge.className = 'demand-badge';
+      demandBadge.textContent = 'High Demand';
+      badgeRow.appendChild(demandBadge);
+    }
+    header.appendChild(name);
+    header.appendChild(badgeRow);
+
+    const freshness = document.createElement('div');
+    freshness.className = 'freshness';
+    freshness.textContent = c.freshnessLabel;
+
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const donateBtn = document.createElement('a');
+    donateBtn.className = 'btn btn-donate';
+    donateBtn.href = c.donateCtaUrl;
+    donateBtn.target = '_top'; // escape HtmlService's sandboxed iframe, or script.google.com refuses to be framed and errors
+    donateBtn.textContent = 'Donate';
+
+    const cta = document.createElement('a');
+    cta.className = 'btn ' + (isAvailable ? 'btn-primary' : 'btn-secondary');
+    cta.href = c.ctaUrl;
+    cta.target = '_top';
+    cta.textContent = c.ctaLabel;
+
+    actions.appendChild(donateBtn);
+    actions.appendChild(cta);
+
+    card.appendChild(header);
+    card.appendChild(freshness);
+    card.appendChild(actions);
+    container.appendChild(card);
+  });
+
+  const categorySearch = document.getElementById('categorySearch');
+  const noCategoryResults = document.getElementById('noCategoryResults');
+  const categoryCards = Array.from(container.children);
+  categorySearch.addEventListener('input', function () {
+    const q = categorySearch.value.trim().toLowerCase();
+    let visibleCount = 0;
+    categoryCards.forEach(function (card) {
+      const matches = card.dataset.categoryName.includes(q);
+      card.style.display = matches ? '' : 'none';
+      if (matches) visibleCount++;
+    });
+    noCategoryResults.style.display = visibleCount === 0 ? 'block' : 'none';
+  });
+</script>

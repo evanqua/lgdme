@@ -1,0 +1,242 @@
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px 48px; color: #222; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; margin-top: 0; }
+  p.subtitle { color: #555; margin-top: 0; }
+  a.back-link { display: inline-block; margin-bottom: 12px; color: #205ea8; font-size: 0.9rem; text-decoration: none; }
+  a.back-link:hover { text-decoration: underline; }
+  fieldset { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 18px; padding: 12px 16px 16px; }
+  legend { font-weight: 600; padding: 0 6px; }
+  .field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+  label { font-weight: 600; font-size: 0.9rem; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .checkbox-row input { margin-top: 4px; }
+  .checkbox-row label { font-weight: normal; }
+  input[type=text], input[type=email], select, textarea {
+    padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: inherit;
+  }
+  button { padding: 10px 22px; font-size: 1rem; border: none; border-radius: 4px; background: #4A90E2; color: white; cursor: pointer; margin-right: 8px; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .placeholder-warning { background: #fff3cd; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-bottom: 10px; }
+  #status { margin-top: 16px; padding: 10px; border-radius: 4px; display: none; }
+  #status.visible { display: block; background: #e8f4ea; color: #1e5c2a; }
+  #status.visible.error { background: #fdecea; color: #a12622; }
+  .success-screen { display: none; text-align: center; padding: 56px 16px; }
+  .success-check { width: 80px; height: 80px; border-radius: 50%; background: #2e7d32; color: #fff; font-size: 2.75rem; line-height: 80px; margin: 0 auto 20px; }
+  .success-screen p { color: #555; margin-bottom: 24px; }
+  .success-screen a.home-btn { display: inline-block; padding: 10px 24px; background: #4A90E2; color: #fff; border-radius: 4px; text-decoration: none; font-weight: 600; }
+</style>
+
+<div id="notFound" style="display:none;">
+  <a class="back-link" id="backLinkNotFound" href="#" target="_top">&larr; Back to home</a>
+  <h1>Link not found</h1>
+  <p>This link isn't valid, or the listing it points to no longer exists. If you think this is a mistake, contact <a href="mailto:<?= getContactEmail() ?>"><?= getContactEmail() ?></a>.</p>
+</div>
+
+<div class="success-screen" id="successScreen">
+  <div class="success-check">&#10003;</div>
+  <h1>You've been opted out</h1>
+  <p id="successMessage"></p>
+  <a class="home-btn" id="successHomeLink" href="#" target="_top">Back to main menu</a>
+</div>
+
+<div id="optOutPage" style="display:none;">
+  <a class="back-link" id="backLinkOptOut" href="#" target="_top">&larr; Back to home</a>
+  <h1><?= getOrgName() ?></h1>
+  <p class="subtitle">Opt out of notifications from a previous submission.</p>
+
+  <form id="optOutForm">
+    <fieldset>
+      <legend>Your original submission</legend>
+      <div class="field">
+        <label for="email">Email used with your initial submission *</label>
+        <input type="email" id="email" required>
+        <p id="identityCheckingNote" style="display:none; margin:2px 0 0; font-size:0.85rem; color:#555;">
+          Checking for your submission…
+        </p>
+        <p id="identityVerifiedNote" style="display:none; margin:2px 0 0; font-size:0.85rem; color:#1e5c2a; font-weight:600;">
+          &#10003; Verified submission
+        </p>
+        <p id="emailNotFoundNote" style="display:none; margin:2px 0 0; font-size:0.85rem; color:#a13a1f;">
+          We couldn't find a submission matching that email, direction, and item. Double-check them against your original submission, or contact <?= getContactEmail() ?>.
+        </p>
+      </div>
+      <div class="field">
+        <label>When you submitted, were you looking to donate or receive equipment? *</label>
+        <div class="checkbox-row"><input type="radio" name="direction" value="Donate" id="dir_donate" required><label for="dir_donate">Donate</label></div>
+        <div class="checkbox-row"><input type="radio" name="direction" value="Receive" id="dir_receive"><label for="dir_receive">Receive</label></div>
+      </div>
+      <div class="field">
+        <label for="item">Which piece of equipment did you list on your original submission? *</label>
+        <select id="item" required><option value="">-- Select --</option></select>
+      </div>
+    </fieldset>
+
+    <div id="postIdentitySection" style="display:none;">
+      <fieldset>
+        <legend>Match outcome</legend>
+        <div class="field">
+          <label>Were you successful in finding a match to donate/receive your item? *</label>
+          <div class="checkbox-row"><input type="radio" name="wasSuccessful" value="yes" id="success_yes" required><label for="success_yes">Yes</label></div>
+          <div class="checkbox-row"><input type="radio" name="wasSuccessful" value="no" id="success_no"><label for="success_no">No</label></div>
+        </div>
+        <div class="field" id="matchedContactField" style="display:none;">
+          <label for="matchedContact">Who did you match with? *</label>
+          <select id="matchedContact" required><option value="">-- Select --</option></select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Feedback (optional)</legend>
+        <div class="field">
+          <label for="feedback">Do you have any feedback on the <?= getOrgName() ?> Large DME Referral system?</label>
+          <textarea id="feedback" rows="3"></textarea>
+        </div>
+        <p style="font-size:0.85rem;color:#555;margin-top:0;">
+          Sharing feedback is completely optional and won't affect your listing or match status
+          either way. Feedback is reviewed internally to help us improve the program.
+        </p>
+      </fieldset>
+
+      <button type="submit" id="submitBtn">Confirm Opt Out</button>
+      <div id="status"></div>
+    </div>
+  </form>
+</div>
+
+<script>
+  const DATA = <?!= checkinDataJson ?>;
+  const HOME_URL = <?!= homeUrlJson ?>;
+  document.getElementById('successHomeLink').href = HOME_URL;
+  document.getElementById('backLinkNotFound').href = HOME_URL;
+  document.getElementById('backLinkOptOut').href = HOME_URL;
+
+  if (!DATA.found) {
+    document.getElementById('notFound').style.display = 'block';
+  } else {
+    document.getElementById('optOutPage').style.display = 'block';
+
+    const itemSelect = document.getElementById('item');
+    const emailInput = document.getElementById('email');
+    const identityCheckingNote = document.getElementById('identityCheckingNote');
+    const identityVerifiedNote = document.getElementById('identityVerifiedNote');
+    const emailNotFoundNote = document.getElementById('emailNotFoundNote');
+    const postIdentitySection = document.getElementById('postIdentitySection');
+    const matchedContactSelect = document.getElementById('matchedContact');
+
+    function populateMatchedContact(options) {
+      matchedContactSelect.innerHTML = '<option value="">-- Select --</option>';
+      (options || []).forEach(function (opt) {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        matchedContactSelect.appendChild(o);
+      });
+      const unsureOpt = document.createElement('option');
+      unsureOpt.value = '__unsure__';
+      unsureOpt.textContent = "Not sure / don't remember";
+      matchedContactSelect.appendChild(unsureOpt);
+    }
+
+    DATA.itemOptions.forEach(function (opt) {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      itemSelect.appendChild(o);
+    });
+
+    // Only one of these three is ever shown at a time — call before setting
+    // whichever one actually applies.
+    function hideIdentityNotes() {
+      identityCheckingNote.style.display = 'none';
+      identityVerifiedNote.style.display = 'none';
+      emailNotFoundNote.style.display = 'none';
+    }
+
+    // Everything below "Your original submission" (match outcome, feedback,
+    // the submit button) stays hidden until a verified email/direction/item
+    // combo comes back — showing match-outcome questions and a submit
+    // button before identity is confirmed just invites confusion (e.g.
+    // submitting against a combo that was never actually verified). The
+    // server only returns matches once it has verified the email actually
+    // has a submission for that direction/item — otherwise anyone could pick
+    // an arbitrary direction/item and see every current match's contact
+    // info without ever having submitted anything themselves.
+    let refreshDebounce = null;
+    function refreshMatches() {
+      clearTimeout(refreshDebounce);
+      const directionRadio = document.querySelector('input[name="direction"]:checked');
+      const direction = directionRadio ? directionRadio.value : '';
+      const item = itemSelect.value;
+      const email = emailInput.value.trim();
+      hideIdentityNotes();
+      postIdentitySection.style.display = 'none';
+      if (!direction || !item || !email) { populateMatchedContact([]); return; }
+      identityCheckingNote.style.display = 'block';
+      refreshDebounce = setTimeout(function () {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            hideIdentityNotes();
+            if (!result.success) { populateMatchedContact([]); return; }
+            populateMatchedContact(result.matches);
+            (result.verified ? identityVerifiedNote : emailNotFoundNote).style.display = 'block';
+            postIdentitySection.style.display = result.verified ? 'block' : 'none';
+          })
+          .withFailureHandler(function () {
+            hideIdentityNotes();
+            populateMatchedContact([]);
+          })
+          .previewOptOutMatches(direction, item, email);
+      }, 400);
+    }
+    itemSelect.addEventListener('change', refreshMatches);
+    emailInput.addEventListener('input', refreshMatches);
+    Array.from(document.getElementsByName('direction')).forEach(function (radio) {
+      radio.addEventListener('change', refreshMatches);
+    });
+
+    function setStatus(html, isError) {
+      const el = document.getElementById('status');
+      el.innerHTML = html;
+      el.className = 'visible' + (isError ? ' error' : '');
+    }
+
+    Array.from(document.getElementsByName('wasSuccessful')).forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        document.getElementById('matchedContactField').style.display = (radio.value === 'yes' && radio.checked) ? 'flex' : 'none';
+      });
+    });
+
+    const form = document.getElementById('optOutForm');
+    const submitBtn = document.getElementById('submitBtn');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const wasSuccessfulRadio = document.querySelector('input[name="wasSuccessful"]:checked');
+      const directionRadio = document.querySelector('input[name="direction"]:checked');
+      const payload = {
+        email: emailInput.value,
+        direction: directionRadio ? directionRadio.value : '',
+        item: itemSelect.value,
+        wasSuccessful: !!wasSuccessfulRadio && wasSuccessfulRadio.value === 'yes',
+        matchedContact: matchedContactSelect.value,
+        feedback: document.getElementById('feedback').value
+      };
+
+      submitBtn.disabled = true;
+      setStatus('Submitting…', false);
+      google.script.run
+        .withSuccessHandler(function (result) {
+          submitBtn.disabled = false;
+          if (!result.success) { setStatus(result.error, true); return; }
+          document.getElementById('optOutPage').style.display = 'none';
+          document.getElementById('successMessage').textContent = 'A confirmation email is on its way.';
+          document.getElementById('successScreen').style.display = 'block';
+        })
+        .withFailureHandler(function (err) {
+          submitBtn.disabled = false;
+          setStatus('Error: ' + ((err && err.message) || err), true);
+        })
+        .optOut(payload);
+    });
+  }
+</script>

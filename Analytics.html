@@ -1,0 +1,419 @@
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px 48px; color: #222; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; margin-top: 32px; margin-bottom: 8px; }
+  p.note { color: #777; font-size: 0.85rem; }
+
+  .chart-section p.chart-caption { color: #666; font-size: 0.85rem; margin-top: -4px; }
+  .chart-hint { color: #777; font-size: 0.8rem; margin: -4px 0 10px; }
+
+  .line-chart-wrap { position: relative; }
+  .line-chart-wrap svg { width: 100%; height: auto; display: block; touch-action: none; }
+  .chart-tooltip {
+    position: absolute; pointer-events: none; background: #0b0b0b; color: #fff; font-size: 0.78rem;
+    padding: 5px 9px; border-radius: 4px; transform: translate(-50%, -125%); white-space: nowrap; z-index: 5;
+  }
+  .axis-line { stroke: #e1e0d9; stroke-width: 1; }
+  .axis-label { fill: #898781; font-size: 9px; }
+  .month-label-svg { fill: #666; font-size: 10px; }
+  .series-line { fill: none; stroke: #4A90E2; stroke-opacity: 0.28; stroke-width: 2; }
+  .series-line.total-line { stroke: #184f95; stroke-opacity: 0.9; stroke-width: 3; }
+  .series-line.dimmed { stroke-opacity: 0.1 !important; }
+  .series-line.hovered { stroke: #205ea8 !important; stroke-opacity: 1 !important; stroke-width: 3; }
+  .series-hit { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
+  .series-dot { fill: #205ea8; stroke: #fcfcfb; stroke-width: 2; }
+
+  .link-btn-inline { background: none; border: none; color: #205ea8; font-size: 0.85rem; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 8px; }
+  table.success-table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 0.8rem; }
+  table.success-table th, table.success-table td { border: 1px solid #ddd; padding: 4px 6px; text-align: right; }
+  table.success-table th:first-child, table.success-table td:first-child { text-align: left; }
+
+  .month-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; border-bottom: 1px solid #ddd; padding-top: 20px; }
+  .month-chart .month-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .month-chart .month-bar { width: 60%; background: #4A90E2; border-radius: 3px 3px 0 0; min-height: 2px; position: relative; }
+  .month-chart .month-count { font-size: 0.75rem; color: #333; margin-bottom: 3px; }
+  .month-labels { display: flex; gap: 10px; margin-top: 6px; }
+  .month-labels div { flex: 1; text-align: center; font-size: 0.75rem; color: #666; }
+
+  .all-time-total { font-size: 1.6rem; font-weight: 600; color: #184f95; }
+  table.stats-table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 0.8rem; }
+  table.stats-table th, table.stats-table td { border: 1px solid #ddd; padding: 4px 8px; text-align: right; }
+  table.stats-table th:first-child, table.stats-table td:first-child { text-align: left; }
+  table.stats-table th { background: #f5f4f0; }
+
+  table.recent-table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 0.8rem; }
+  table.recent-table th, table.recent-table td { border: 1px solid #ddd; padding: 5px 8px; text-align: left; vertical-align: top; }
+  table.recent-table th { background: #f5f4f0; white-space: nowrap; }
+  table.recent-table td.feedback-cell { max-width: 220px; white-space: pre-wrap; color: #444; }
+  table.recent-table td.status-opted-out { color: #1a7a3c; }
+  table.recent-table td.status-expired { color: #a35a00; }
+</style>
+
+<h1>Internal analytics — <?= getOrgName() ?></h1>
+<p class="note">Not linked from the public site — reachable only by direct URL. Contains individually identifiable submitter info (the recent-opt-outs feed below) as well as historical aggregates — unlike the public home page, which is deliberately limited to category-level status only.</p>
+
+<div class="chart-section">
+  <h2>Recent opt-outs</h2>
+  <p class="chart-caption">Most recent <?= RECENT_OPT_OUTS_LIMIT ?> — newest first. Only includes opt-outs recorded since the opt_out_timestamp column was added; older ones have no reliable date to sort by.</p>
+  <div id="recentOptOutsTable"></div>
+</div>
+
+<div class="chart-section">
+  <h2>Successful donations</h2>
+  <p class="all-time-total" id="allTimeTotal"></p>
+  <p class="note">All-time count, computed directly from rows marked as a confirmed successful donation — independent of the windowed chart below and of whether a row's item matches a known category.</p>
+  <p class="chart-caption" id="successCaption"></p>
+  <p class="chart-hint">One line per item, plus the bold total — hover or tap a line to see which item it is.</p>
+  <div class="line-chart-wrap">
+    <svg id="successChart" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet"></svg>
+    <div id="successTooltip" class="chart-tooltip" style="display:none;"></div>
+  </div>
+  <button type="button" id="toggleTableBtn" class="link-btn-inline">View as table</button>
+  <div id="successTable" style="display:none;"></div>
+</div>
+
+<div class="chart-section">
+  <h2>Donations added per month</h2>
+  <p class="chart-caption">Last 6 months</p>
+  <div id="monthChart"></div>
+  <div class="month-labels" id="monthLabels"></div>
+</div>
+
+<div class="chart-section">
+  <h2>Listing outcomes</h2>
+  <p class="chart-caption">All-time, by direction</p>
+  <div id="optOutTotalsTable"></div>
+</div>
+
+<div class="chart-section">
+  <h2>Time to opt out (days)</h2>
+  <p class="chart-caption">From submission to opt-out — only rows with a recorded opt-out date are included</p>
+  <div id="timeToOptOutTable"></div>
+</div>
+
+<script>
+  const DATA = <?!= analyticsDataJson ?>;
+
+  document.getElementById('allTimeTotal').textContent = DATA.successfulDonationsChart.allTimeTotal + ' total successful donations (all time)';
+
+  // Recent opt-outs feed — one row per person, newest first, with the
+  // outcome and any feedback they left. See buildRecentOptOuts (HomeServer.js).
+  (function renderRecentOptOuts() {
+    const rows = DATA.recentOptOuts;
+    const container = document.getElementById('recentOptOutsTable');
+    if (!rows.length) {
+      const p = document.createElement('p');
+      p.className = 'note';
+      p.textContent = 'No opt-outs recorded yet.';
+      container.appendChild(p);
+      return;
+    }
+
+    const table = document.createElement('table');
+    table.className = 'recent-table';
+    const headRow = document.createElement('tr');
+    ['Date', 'Name', 'Email', 'Item', 'Direction', 'Status', 'Outcome', 'Matched with', 'Feedback'].forEach(function (h) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headRow.appendChild(th);
+    });
+    table.appendChild(headRow);
+
+    rows.forEach(function (r) {
+      const tr = document.createElement('tr');
+      const cells = [r.date, r.name, r.email, r.item, r.direction, r.status, r.outcome, r.matchedWith, r.feedback];
+      cells.forEach(function (val, i) {
+        const td = document.createElement('td');
+        td.textContent = val || '';
+        if (i === 5) td.className = r.status === 'Expired' ? 'status-expired' : 'status-opted-out';
+        if (i === 8) td.className += ' feedback-cell';
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+
+    container.appendChild(table);
+  })();
+
+  renderSuccessChart(DATA.successfulDonationsChart);
+
+  // Overlaid line-per-category chart (successful donations, i.e. confirmed via
+  // the opt-out/check-in flow, not just submitted) plus a bold "Total" line.
+  // No color-coded key by design — with up to 15 categories a legend would be
+  // both unreadable and impossible to keep colorblind-safe, so identity is
+  // conveyed by hovering/clicking a line instead (and via the table fallback
+  // below, so the data is never gated behind hover for anyone who can't).
+  function renderSuccessChart(chart) {
+    document.getElementById('successCaption').textContent = chart.windowLabel;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.getElementById('successChart');
+    const W = 640, H = 260;
+    const padL = 34, padR = 12, padT = 16, padB = 32;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const months = chart.monthLabels;
+    const n = months.length;
+    const niceMax = Math.max(1, chart.maxCount);
+
+    function xFor(i) { return padL + (n > 1 ? i * (plotW / (n - 1)) : plotW / 2); }
+    function yFor(v) { return padT + plotH - (v / niceMax) * plotH; }
+    function pointsFor(counts) { return counts.map(function (c, i) { return xFor(i) + ',' + yFor(c); }).join(' '); }
+
+    function svgEl(name, attrs) {
+      const e = document.createElementNS(svgNS, name);
+      Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+      return e;
+    }
+
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    // Gridlines + y-axis ticks (0, half, max) — recessive hairlines, not data ink.
+    [0, 0.5, 1].forEach(function (frac) {
+      const val = Math.round(niceMax * frac);
+      const y = yFor(val);
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, class: 'axis-line' }));
+      const t = svgEl('text', { x: padL - 6, y: y + 3, class: 'axis-label', 'text-anchor': 'end' });
+      t.textContent = val;
+      svg.appendChild(t);
+    });
+
+    // Month labels along the bottom — first/last anchor inward so they don't
+    // clip past the chart edge.
+    months.forEach(function (label, i) {
+      const anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
+      const t = svgEl('text', { x: xFor(i), y: H - 10, class: 'month-label-svg', 'text-anchor': anchor });
+      t.textContent = label;
+      svg.appendChild(t);
+    });
+
+    const seriesEntries = chart.series.map(function (s) {
+      return { category: s.category, counts: s.counts, isTotal: false };
+    });
+    seriesEntries.push({ category: 'Total', counts: chart.totalCounts, isTotal: true });
+
+    const lineGroup = svgEl('g', {});
+    svg.appendChild(lineGroup);
+
+    const lineEls = seriesEntries.map(function (s) {
+      const visible = svgEl('polyline', { points: pointsFor(s.counts), class: 'series-line' + (s.isTotal ? ' total-line' : '') });
+      // Invisible wide-stroke twin so thin 2px lines still have a comfortably
+      // large hover/tap target (interaction hit area > the painted mark).
+      const hit = svgEl('polyline', { points: pointsFor(s.counts), class: 'series-hit' });
+      lineGroup.appendChild(visible);
+      lineGroup.appendChild(hit);
+      return { series: s, visibleEl: visible };
+    });
+
+    const tooltip = document.getElementById('successTooltip');
+    const wrap = svg.parentElement;
+    let pinned = null;
+    let dot = null;
+
+    function baseClass(le) { return 'series-line' + (le.series.isTotal ? ' total-line' : ''); }
+
+    function resetHighlight() {
+      lineEls.forEach(function (le) { le.visibleEl.setAttribute('class', baseClass(le)); });
+      if (dot) { dot.remove(); dot = null; }
+      tooltip.style.display = 'none';
+    }
+
+    function highlight(le, monthIdx, tipX, tipY) {
+      lineEls.forEach(function (other) {
+        const cls = baseClass(other) + (other === le ? ' hovered' : ' dimmed');
+        other.visibleEl.setAttribute('class', cls);
+      });
+      if (dot) dot.remove();
+      dot = svgEl('circle', { cx: xFor(monthIdx), cy: yFor(le.series.counts[monthIdx]), r: 5, class: 'series-dot' });
+      svg.appendChild(dot);
+
+      tooltip.textContent = le.series.category + ': ' + le.series.counts[monthIdx] + ' in ' + months[monthIdx];
+      tooltip.style.display = 'block';
+      tooltip.style.left = tipX + 'px';
+      tooltip.style.top = tipY + 'px';
+    }
+
+    function findNearest(svgX, svgY) {
+      let monthIdx = 0, bestDx = Infinity;
+      for (let i = 0; i < n; i++) {
+        const dx = Math.abs(xFor(i) - svgX);
+        if (dx < bestDx) { bestDx = dx; monthIdx = i; }
+      }
+      let best = null, bestDy = Infinity;
+      lineEls.forEach(function (le) {
+        const dy = Math.abs(yFor(le.series.counts[monthIdx]) - svgY);
+        if (dy < bestDy) { bestDy = dy; best = le; }
+      });
+      return (best && bestDy <= 18) ? { le: best, monthIdx: monthIdx } : null;
+    }
+
+    function svgPoint(evt) {
+      const rect = svg.getBoundingClientRect();
+      return {
+        x: (evt.clientX - rect.left) * (W / rect.width),
+        y: (evt.clientY - rect.top) * (H / rect.height)
+      };
+    }
+
+    function tipPos(evt) {
+      const wrapRect = wrap.getBoundingClientRect();
+      return { x: evt.clientX - wrapRect.left, y: evt.clientY - wrapRect.top };
+    }
+
+    svg.addEventListener('pointermove', function (evt) {
+      if (pinned) return;
+      const p = svgPoint(evt);
+      const found = findNearest(p.x, p.y);
+      if (found) {
+        const tip = tipPos(evt);
+        highlight(found.le, found.monthIdx, tip.x, tip.y);
+      } else {
+        resetHighlight();
+      }
+    });
+
+    svg.addEventListener('pointerleave', function () {
+      if (!pinned) resetHighlight();
+    });
+
+    svg.addEventListener('click', function (evt) {
+      const p = svgPoint(evt);
+      const found = findNearest(p.x, p.y);
+      if (found && pinned && pinned.le === found.le) {
+        pinned = null;
+        resetHighlight();
+        return;
+      }
+      if (found) {
+        pinned = found;
+        const tip = tipPos(evt);
+        highlight(found.le, found.monthIdx, tip.x, tip.y);
+      } else {
+        pinned = null;
+        resetHighlight();
+      }
+    });
+
+    // Table fallback — same data reachable without hovering/tapping a line,
+    // for anyone who can't (or won't) rely on the interaction above.
+    const tableBtn = document.getElementById('toggleTableBtn');
+    const tableDiv = document.getElementById('successTable');
+    let tableBuilt = false;
+    tableBtn.addEventListener('click', function () {
+      const showing = tableDiv.style.display !== 'none';
+      if (!tableBuilt) {
+        const table = document.createElement('table');
+        table.className = 'success-table';
+        const headRow = document.createElement('tr');
+        const thItem = document.createElement('th');
+        thItem.textContent = 'Item';
+        headRow.appendChild(thItem);
+        months.forEach(function (m) {
+          const th = document.createElement('th');
+          th.textContent = m;
+          headRow.appendChild(th);
+        });
+        table.appendChild(headRow);
+
+        seriesEntries.forEach(function (s) {
+          const tr = document.createElement('tr');
+          const tdName = document.createElement('td');
+          tdName.textContent = s.category;
+          tr.appendChild(tdName);
+          s.counts.forEach(function (c) {
+            const td = document.createElement('td');
+            td.textContent = c;
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+        tableDiv.appendChild(table);
+        tableBuilt = true;
+      }
+      tableDiv.style.display = showing ? 'none' : 'block';
+      tableBtn.textContent = showing ? 'View as table' : 'Hide table';
+    });
+  }
+
+  const monthChartEl = document.getElementById('monthChart');
+  monthChartEl.className = 'month-chart';
+  DATA.monthlyChart.counts.forEach(function (n, i) {
+    const col = document.createElement('div');
+    col.className = 'month-col';
+    const countLabel = document.createElement('div');
+    countLabel.className = 'month-count';
+    countLabel.textContent = n;
+    const bar = document.createElement('div');
+    bar.className = 'month-bar';
+    bar.style.height = (n / DATA.monthlyChart.maxCount * 100) + '%';
+    col.appendChild(countLabel);
+    col.appendChild(bar);
+    monthChartEl.appendChild(col);
+  });
+
+  const monthLabelsEl = document.getElementById('monthLabels');
+  DATA.monthlyChart.monthLabels.forEach(function (label) {
+    const div = document.createElement('div');
+    div.textContent = label;
+    monthLabelsEl.appendChild(div);
+  });
+
+  function fmtCount(n) { return n == null ? '—' : n; }
+  function fmtPct(r) { return r == null ? '—' : (r * 100).toFixed(1) + '%'; }
+  function fmtDays(v) { return v == null ? '—' : v; }
+
+  function buildTable(headers, rows) {
+    const table = document.createElement('table');
+    table.className = 'stats-table';
+    const headRow = document.createElement('tr');
+    headers.forEach(function (h) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headRow.appendChild(th);
+    });
+    table.appendChild(headRow);
+    rows.forEach(function (cells) {
+      const tr = document.createElement('tr');
+      cells.forEach(function (c) {
+        const td = document.createElement('td');
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    return table;
+  }
+
+  // Listing outcomes: total/active/expired/opted-out/matched/not-matched
+  // counts and rates, one row per direction plus a combined row.
+  (function renderOptOutTotals() {
+    const t = DATA.optOutTotals;
+    const headers = ['', 'Total', 'Active', 'Expired', 'Opted out', 'Matched', 'Not matched', 'Expired rate', 'Matched rate (of all)', 'Matched rate (of opted out)'];
+    const rowFor = function (label, d) {
+      return [label, fmtCount(d.total), fmtCount(d.active), fmtCount(d.expired), fmtCount(d.optedOut), fmtCount(d.matched), fmtCount(d.notMatched), fmtPct(d.expiredRate), fmtPct(d.matchedRate), fmtPct(d.matchedRateOfOptedOut)];
+    };
+    const rows = [
+      rowFor('Donors', t.donate),
+      rowFor('Requesters', t.receive),
+      rowFor('Combined', t.combined)
+    ];
+    document.getElementById('optOutTotalsTable').appendChild(buildTable(headers, rows));
+  })();
+
+  // Time to opt out: donor/requester x with-match/without-match, each with
+  // count, mean, median, and percentiles.
+  (function renderTimeToOptOut() {
+    const tto = DATA.timeToOptOut;
+    const headers = ['', 'Count', 'Mean', 'Median', 'P25', 'P75', 'P90'];
+    const rowFor = function (label, s) {
+      return [label, fmtCount(s.count), fmtDays(s.mean), fmtDays(s.median), fmtDays(s.p25), fmtDays(s.p75), fmtDays(s.p90)];
+    };
+    const rows = [
+      rowFor('Donors — with match', tto.donate.withMatch),
+      rowFor('Donors — without match', tto.donate.withoutMatch),
+      rowFor('Requesters — with match', tto.receive.withMatch),
+      rowFor('Requesters — without match', tto.receive.withoutMatch)
+    ];
+    document.getElementById('timeToOptOutTable').appendChild(buildTable(headers, rows));
+  })();
+</script>
