@@ -78,10 +78,17 @@ actually replaced it.
 
 ## Working conventions
 
-- No build step, no npm dependencies, no TypeScript. Plain Apps Script
+- No build step in the deploy path, no TypeScript. Plain Apps Script
   (`.js`) and HTML template (`.html`) files pushed as-is via `clasp push`.
 - `.clasp.json` is gitignored (it holds a real project's `scriptId`); see
   `.clasp.json.example` and `SETUP.md` for how each instance creates its own.
-- There is no automated test suite. Verify changes by running the relevant
+- `npm test` (or `node --test test/`) runs a small, dependency-free local
+  suite covering pure logic only: `colIndex`, the `ITEM_CATEGORIES`/
+  `ITEM_FIELD_DEFS` length-parity contract, `findActiveMatches`/`normalize`/
+  `itemLabel`, and `validateSubmission`. It loads the real source files into
+  a Node `vm` context (`test/lib/loadAppsScript.js`) rather than adding
+  `module.exports` to them, and is excluded from what `clasp push` sends
+  (`.claspignore`). It does not touch a real Spreadsheet, send real email, or
+  exercise the Web App's HTTP routes; verify those by running the relevant
   function from the Apps Script editor's function dropdown, or by exercising
   the deployed Web App directly.

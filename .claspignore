@@ -1,7 +1,14 @@
-# Local-only, never pushed to Apps Script — see CLAUDE.md/README.md.
+# Local-only, never pushed to Apps Script, see CLAUDE.md/README.md.
 tools/**
 data/**
 *.csv
 node_modules/**
 .git/**
 .claude/**
+
+# Local logic-only unit tests (node --test), not Apps Script code, would
+# fail to load in the V8 runtime (require/module.exports aren't available
+# there the way this test harness uses them).
+test/**
+package.json
+package-lock.json

@@ -1,0 +1,8 @@
+{
+  "name": "lgdme",
+  "private": true,
+  "description": "Local logic-only unit tests for the Apps Script source (not pushed to Apps Script, see .claspignore).",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
