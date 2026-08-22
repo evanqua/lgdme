@@ -13,6 +13,25 @@ system is stable enough for other orgs to depend on it without expecting
 breakage, `1.0.0` marks that commitment; see [Versioning](README.md#versioning)
 in the README for how versions map to git tags and Apps Script deployments.
 
+## [0.2.1] - 2026-08-22
+
+Documentation and metadata only, no code or schema change. Cut as its own
+release so this version has a citable archive.
+
+### Added
+- README badges: license, latest release (reads live from GitHub's Releases
+  API, no manual updating needed), CI test status, and a PRs-welcome badge.
+  A placeholder comment marks where to add a Zenodo DOI badge once this
+  release (or a later one) is archived.
+- An Origin and support section in the README crediting ReCARES as the
+  project's sponsor, with a link to recares.org and a note on how to support
+  ongoing maintenance.
+- A See it in action section in the README, and a matching note in
+  `SETUP.md`, linking ReCARES's own production deployment as a real-world
+  example.
+- A GitHub Actions workflow (`.github/workflows/test.yml`) running the local
+  test suite on every push and pull request against `main`.
+
 ## [0.2.0] - 2026-08-22
 
 Official start release: the repository is now public, with a full setup,
