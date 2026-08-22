@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 This project is currently pre-1.0 (`0.y.z`). Per the SemVer spec's own rule for
-initial development, anything — including the `Submissions`/`MatchLog` sheet
-schema, `SiteConfig.js`/`Config.js`'s config shape, and Web App routing — may
+initial development, anything, including the `Submissions`/`MatchLog` sheet
+schema, `SiteConfig.js`/`Config.js`'s config shape, and Web App routing, may
 still change between minor versions without a major-version bump. Once the
 system is stable enough for other orgs to depend on it without expecting
 breakage, `1.0.0` marks that commitment; see [Versioning](README.md#versioning)
@@ -40,10 +40,10 @@ legacy-form baggage.
   against that list by array position instead of keeping its own
   independently-typed copy of the names.
 
-### Known placeholders (not yet real content — see `CLAUDE.md`)
+### Known placeholders (not yet real content, see `CLAUDE.md`)
 - Consent/waiver text and donation receipt wording ship as clearly-marked
-  filler, not organization-approved copy — replace both before collecting
+  filler, not organization-approved copy. Replace both before collecting
   real submissions.
 - `SiteConfig.js`'s `ITEM_CATEGORIES` ships as a short illustrative example
-  (not a real category list) and `SERVICE_AREA_CITIES` ships empty — every
+  (not a real category list) and `SERVICE_AREA_CITIES` ships empty. Every
   adopter is expected to replace both for their own organization.

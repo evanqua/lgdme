@@ -1,10 +1,20 @@
 # LgDME System
 
-A Google Apps Script system that matches donors and requesters of durable medical equipment (hospital beds, wheelchairs, stair lifts, and similar items) and emails both sides when a match is found.
+A Google Apps Script system that matches donors and requesters of durable medical equipment (hospital beds, wheelchairs, stair lifts, and similar items) and emails both sides when a match is found. It runs entirely on Google's own infrastructure (Sheets, Apps Script, Gmail, Drive), with no server to host and no database to run.
 
-License: AGPL-3.0 — Copyright (C) 2026 The ReCARES Network. See [LICENSE](LICENSE).
+License: AGPL-3.0. Copyright (C) 2026 The ReCARES Network. See [LICENSE](LICENSE).
 
-Status: active development, pre-release (`0.x` — no API/schema stability guarantees yet)
+Status: active development, pre-release (`0.x`, no API/schema stability guarantees yet)
+
+## Documentation
+
+- [SETUP.md](SETUP.md): full walkthrough for standing up your own instance, including Google account/Workspace requirements, email sending limits, and deployment.
+- [ARCHITECTURE.md](ARCHITECTURE.md): how the system is built, the request flow, the matching engine, and the token portal.
+- [SCHEMA.md](SCHEMA.md): the data model, described independently of any specific database technology.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to propose a change, coding conventions, and what belongs in this repo versus a downstream fork.
+- [SECURITY.md](SECURITY.md): the security model of a deployed instance, and how to report a vulnerability.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): expected behavior in this project's spaces.
+- [CHANGELOG.md](CHANGELOG.md): notable changes by version.
 
 ## Versioning
 
@@ -12,14 +22,14 @@ This project follows [Semantic Versioning](https://semver.org/). Notable
 changes are recorded in [CHANGELOG.md](CHANGELOG.md), and each released
 version is tagged in git as `vMAJOR.MINOR.PATCH` (e.g. `v0.1.0`).
 
-While the version stays `0.y.z`, treat everything — including the
+While the version stays `0.y.z`, treat everything, including the
 `Submissions`/`MatchLog` sheet schema, `SiteConfig.js`/`Config.js`'s config
-shape, and Web App routing — as potentially breaking between minor versions,
+shape, and Web App routing, as potentially breaking between minor versions,
 per SemVer's own rule for initial development. `1.0.0` is reserved for the
 point this is stable enough for other organizations to depend on without
 expecting breakage.
 
-A git tag marks a reviewed checkpoint of the code, not a live deployment —
-pushing/tagging `main` doesn't by itself change what a Web App URL serves.
+A git tag marks a reviewed checkpoint of the code, not a live deployment.
+Pushing/tagging `main` doesn't by itself change what a Web App URL serves.
 Match a tagged release to what's actually live by giving its `clasp deploy`
 description the same version number (e.g. `clasp deploy -i <id> -d "v0.2.0"`).
