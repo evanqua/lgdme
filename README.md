@@ -3,8 +3,7 @@
 [![License](https://img.shields.io/github/license/evanqua/lgdme)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/evanqua/lgdme)](https://github.com/evanqua/lgdme/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/evanqua/lgdme/test.yml?branch=main&label=tests)](https://github.com/evanqua/lgdme/actions/workflows/test.yml)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-<!-- Zenodo DOI badge: add here once the release is archived, e.g. [![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://doi.org/<your-doi>) -->
+[![DOI](https://zenodo.org/badge/1343000007.svg)](https://doi.org/10.5281/zenodo.22060600)
 
 A Google Apps Script system that matches donors and requesters of durable medical equipment (hospital beds, wheelchairs, stair lifts, and similar items) and emails both sides when a match is found. It runs entirely on Google's own infrastructure (Sheets, Apps Script, Gmail, Drive), with no server to host and no database to run.
 
