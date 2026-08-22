@@ -13,6 +13,19 @@ system is stable enough for other orgs to depend on it without expecting
 breakage, `1.0.0` marks that commitment; see [Versioning](README.md#versioning)
 in the README for how versions map to git tags and Apps Script deployments.
 
+## [Unreleased]
+
+### Added
+- `.github/FUNDING.yml` pointing to recares.org, so GitHub shows a Sponsor
+  button on the repo.
+- Issue templates for bug reports and feature requests, and a pull request
+  template reinforcing the Issue/PR/CHANGELOG/test checklist from
+  `CLAUDE.md`'s Contribution workflow section.
+- Repository description, homepage link, and discoverability topics set on
+  GitHub.
+- Three starter issues filed for newcomers (line-ending normalization, an
+  accessibility fallback for the home page charts, and README screenshots).
+
 ## [0.2.1] - 2026-08-22
 
 Documentation and metadata only, no code or schema change. Cut as its own
