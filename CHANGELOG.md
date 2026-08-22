@@ -13,6 +13,36 @@ system is stable enough for other orgs to depend on it without expecting
 breakage, `1.0.0` marks that commitment; see [Versioning](README.md#versioning)
 in the README for how versions map to git tags and Apps Script deployments.
 
+## [0.2.0] - 2026-08-22
+
+Official start release: the repository is now public, with a full setup,
+architecture, and contribution documentation set, a local test suite, and a
+documented contribution process.
+
+### Added
+- `ARCHITECTURE.md`: design goals, request flow, the matching engine, the
+  token portal's security model, and the platform's real constraints.
+- `CONTRIBUTING.md`: local dev workflow, coding conventions, what belongs in
+  this repo versus a downstream fork.
+- `SECURITY.md`: the security model of a deployed instance (token handling,
+  PII exposure, uploaded-photo storage, Google account permissions), and how
+  to report a vulnerability.
+- `CODE_OF_CONDUCT.md`.
+- A local, dependency-free `node:test` suite (`test/`) covering `colIndex`,
+  the `ITEM_CATEGORIES`/`ITEM_FIELD_DEFS` length-parity contract,
+  `findActiveMatches`/`normalize`/`itemLabel`, and `validateSubmission`.
+  Excluded from what `clasp push` sends.
+- GitHub's private vulnerability reporting, enabled on this repository.
+- A documented Issue/PR/semantic-versioning contribution workflow
+  (`CLAUDE.md`), including a Conventional Commits style prefix convention
+  mapped to SemVer bump size.
+
+### Changed
+- `SETUP.md` substantially expanded: Google account vs Google Workspace
+  tradeoffs, email sending quotas, the Spreadsheet-as-database model,
+  uploaded-photo storage, and a troubleshooting section.
+- Repository visibility changed from private to public.
+
 ## [0.1.0] - 2026-08-22
 
 Initial public template release: a single, unified Web App system with no

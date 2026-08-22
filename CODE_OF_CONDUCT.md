@@ -18,7 +18,7 @@ This applies to every space connected to this project: the repository itself (is
 
 ## Reporting
 
-If someone's behavior in a project space falls short of this standard, report it privately to the project's maintainer rather than escalating publicly in the same thread. **PLACEHOLDER: the maintainer has not yet published a dedicated contact address for this; until one exists, use a private message through GitHub to a maintainer listed on the repository.**
+If someone's behavior in a project space falls short of this standard, report it privately to evanqua@berkeley.edu rather than escalating publicly in the same thread.
 
 Reports are handled in confidence to the extent possible. Retaliation against someone for making a good-faith report is itself a violation of this policy.
 

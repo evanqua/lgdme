@@ -20,9 +20,13 @@ This project is pre-1.0 (see `README.md`'s Versioning section). There is one sup
 
 ## 2. Reporting a vulnerability
 
-**PLACEHOLDER: replace this section with your own reporting contact before real use.** This repository does not have a maintained security contact assigned yet.
+Do not open a public GitHub issue for a security vulnerability, since that discloses it before a fix is available. Use one of the two private channels below instead.
 
-Do not open a public GitHub issue for a security vulnerability, since that discloses it before a fix is available. If this repository has GitHub's private vulnerability reporting feature enabled (Security tab, Report a vulnerability), use that. Otherwise, whoever maintains your fork should publish a private contact method here (a dedicated email address is typical) and remove this placeholder notice.
+**Preferred: GitHub's private vulnerability reporting.** This repository has it enabled. Go to the Security tab, then Report a vulnerability, to open a private advisory that only the maintainer can see. This is the best option since it keeps the whole conversation, and any fix, attached to a proper security advisory.
+
+**Alternative: email.** Contact evanqua@berkeley.edu directly. Include what you found, the steps to reproduce it, and its impact if you can. Expect an acknowledgment within a few days; this is a small, volunteer-maintained project, not a company with a dedicated security team.
+
+If you fork this repository for your own organization's deployment, replace the email address above with your own maintainer's contact before relying on this section, since a security report sent to the address above will reach the upstream template's maintainer, not you.
 
 If you are running your own deployment of this system and you discover a vulnerability that affects your specific instance's data (not the codebase itself), treat it as an operational incident for your organization first: rotate whatever is exposed, and consider whether affected submitters need to be notified, independent of whether you also report the underlying code issue upstream.
 

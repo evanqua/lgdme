@@ -76,6 +76,54 @@ Do not treat any of the above as real content when reasoning about what the
 system currently says to users. Check whether the specific deployment has
 actually replaced it.
 
+## Contribution workflow: Issue, PR, and semantic versioning
+
+This follows the standard open source pattern of Issue first, then a PR that
+closes it, then a version bump sized by what actually changed. Apply this to
+any change beyond a trivial typo or formatting fix, and expect it when
+proposing or reviewing a change in this repo.
+
+**1. Open an Issue before starting real work.** State what the change is and
+why. This gives a place for discussion before code exists, and something for
+the PR to reference. Skip this only for genuinely small fixes (a typo, a
+broken link, an off-by-one in a comment).
+
+**2. Do the work on a branch, then open a PR against `main`.** The PR
+description should say `Closes #<issue number>` (or `Fixes #<issue number>`)
+so GitHub links and auto-closes the issue on merge. See `CONTRIBUTING.md` for
+the full local dev workflow (your own test Apps Script project, `npm test`,
+manual verification).
+
+**3. Title the PR, and write its commits, using a Conventional Commits style
+prefix.** This is what lets the version bump in step 4 be a mechanical
+decision instead of a judgment call each time:
+
+| Prefix | Meaning | SemVer bump |
+|---|---|---|
+| `fix:` | A bug fix, no behavior added | Patch (`0.y.Z`) |
+| `feat:` | A new, backward-compatible feature or field | Minor (`0.Y.z`) |
+| `docs:` | Documentation only, no code change | None (no release needed on its own) |
+| `refactor:` | Internal restructuring, no behavior change | None, unless it also fixes something, then use `fix:` |
+| `test:` | Test-only change | None |
+| `chore:` | Tooling, config, dependency-adjacent housekeeping | None |
+| `feat!:` or a `BREAKING CHANGE:` footer in the commit body | An incompatible change to the `Submissions`/`MatchLog` schema, the `Config.js`/`SiteConfig.js` shape, or Web App routing | Major (`X.0.0`) once this project reaches `1.0.0`; before `1.0.0`, SemVer's initial-development rule means any of these can still land as a minor bump (see `README.md`'s Versioning section), but the PR must still call out the break explicitly in its description and in the `CHANGELOG.md` entry |
+
+**4. Add a `CHANGELOG.md` entry under `## [Unreleased]` as part of the same
+PR**, in the matching Added/Changed/Fixed/Removed section (Keep a Changelog
+format, already used throughout this file). Reviewing a PR without a
+changelog entry is an incomplete review; ask for one rather than adding it
+yourself on the author's behalf.
+
+**5. Cutting an actual release is a separate, deliberate step**, not
+something that happens automatically on every merge. When it's time to cut
+one: rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` with the correct
+version (patch if only `fix:`/none-bump entries accumulated since the last
+release, minor if any `feat:` landed, major-per-`1.0.0`-rules if any
+breaking change landed), tag the commit (`git tag vX.Y.Z`), and push the tag.
+A git tag marks a reviewed checkpoint of the code, not a live deployment;
+match a tagged release to what's actually live by giving its `clasp deploy`
+description the same version number, per `README.md`'s Versioning section.
+
 ## Working conventions
 
 - No build step in the deploy path, no TypeScript. Plain Apps Script
