@@ -28,6 +28,7 @@ This is a real, live deployment serving the Bay Area, not a demo environment. It
 ## Documentation
 
 - [SETUP.md](SETUP.md): full walkthrough for standing up your own instance, including Google account/Workspace requirements, email sending limits, and deployment.
+- [FAQ.md](FAQ.md): short answers to the questions that come up most before adopting this, and how to reach a person with more.
 - [ARCHITECTURE.md](ARCHITECTURE.md): how the system is built, the request flow, the matching engine, and the token portal.
 - [SCHEMA.md](SCHEMA.md): the data model, described independently of any specific database technology.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to propose a change, coding conventions, and what belongs in this repo versus a downstream fork.
