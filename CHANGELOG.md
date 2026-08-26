@@ -31,6 +31,16 @@ in the README for how versions map to git tags and Apps Script deployments.
   GitHub.
 - Three starter issues filed for newcomers (line-ending normalization, an
   accessibility fallback for the home page charts, and README screenshots).
+- `.gitattributes` normalizing `.js`/`.html`/`.md`/`.json` to LF line endings
+  in the repository regardless of a contributor's local `core.autocrlf`
+  setting. Closes #1.
+
+### Fixed
+- `ARCHITECTURE.md`'s `HomeServer.js` row described the two bar charts as
+  part of the public home page's view model; they were moved to the
+  internal-only analytics view model (`?view=analytics`) before this repo
+  went public. Also closed issue #2, which was filed against the stale
+  public-home-page description.
 
 ## [0.2.1] - 2026-08-22
 

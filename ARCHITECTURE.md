@@ -59,7 +59,7 @@ Form submissions from the intake form do not go through a normal HTTP POST. `Int
 | `Matching.js` | The matching predicate (`findActiveMatches`), the two notification email builders (`sendSubmitterEmail`, `sendMatchAlertEmail`), and `MatchLog` writes. |
 | `PortalServer.js` | Backend for the token-based self-service portal: report a match outcome, report no match, confirm receipt, renew a stale listing, optional feedback. |
 | `OptOutServer.js` | Backend for the token-less opt-out page, for someone without a handy notification email. |
-| `HomeServer.js` | Builds the public home page's view model (category status, the two bar charts) and the internal analytics view model. Deliberately withholds exact counts and individual listings from the public version. |
+| `HomeServer.js` | Builds the public home page's view model (category status, all-time exchange/open-request totals) and the internal analytics view model (the two bar charts, `?view=analytics`, unlinked). Deliberately withholds exact counts and individual listings from the public version. |
 | `Config.js` | Reads org identity and behavior settings (`ORG_NAME`, `CONTACT_EMAIL`, `EXPIRATION_DAYS`, `HIGH_DEMAND_THRESHOLD`) from Script Properties, with code-level fallback defaults. |
 | `Installer.js` | `setupNewInstance()`, the one-time idempotent setup function described in `SETUP.md`. |
 | `Triggers.js` | The two daily scheduled functions: `dailySubmissionMaintenance` and `runAuditFlags`. |
