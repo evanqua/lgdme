@@ -67,6 +67,8 @@ function buildHomeViewModel() {
     };
   }).sort((a, b) => categorySortRank(a.status) - categorySortRank(b.status));
 
+  const sinceMidnight = startOfTodayLocal();
+
   return {
     categories: categoryStatuses,
     totals: {
@@ -76,7 +78,15 @@ function buildHomeViewModel() {
       // Combined across every category — never broken out per category on
       // this page (see category-card status, which only shows Available/None,
       // and the High Demand badge, which is a boolean, not a count).
-      openRequests: sumValues(activeReceiveCountsByCategory)
+      openRequests: sumValues(activeReceiveCountsByCategory),
+      // Feeds the small "new since midnight" badge on each stat (Index.html)
+      // — how much of the total above is attributable to rows dated today,
+      // using the same per-total counting rule as the total itself (see
+      // countNewSuccessfulDonationsSince/countNewActiveReceiveRowsSince) so
+      // the badge always reads as "this is the part of the total that's new
+      // today," never a differently-defined number.
+      newExchangesToday: countNewSuccessfulDonationsSince(donateRowsByCategory, sinceMidnight),
+      newRequestsToday: countNewActiveReceiveRowsSince(receiveRowsByCategory, sinceMidnight)
     },
     // Exposed only as the raw threshold number for the "Current categories"
     // footnote — never combined with a per-category count, so this still
@@ -294,6 +304,48 @@ function countActiveReceiveRowsByCategory(receiveRowsByCategory) {
 
 function sumValues(obj) {
   return Object.keys(obj).reduce((total, k) => total + obj[k], 0);
+}
+
+// Start of today in the script's local timezone (Apps Script's V8 runtime
+// defaults Date methods like getHours/setHours to the project's timezone,
+// same assumption relativeTimeAgo and the analytics builders already make)
+// — the cutoff for the two stats-strip "new since midnight" badges below.
+function startOfTodayLocal() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+// How many of the rows countAllTimeSuccessfulDonations() counts are new
+// since sinceDate — same isConfirmedSuccess filter and same
+// opt_out_timestamp-falling-back-to-timestamp date convention as
+// buildSuccessfulDonationsChart, so this is exactly "how much of that total
+// is from today," not a differently-defined count.
+function countNewSuccessfulDonationsSince(donateRowsByCategory, sinceDate) {
+  let count = 0;
+  Object.keys(donateRowsByCategory).forEach(category => {
+    donateRowsByCategory[category].forEach(row => {
+      if (!isConfirmedSuccess(row[colIndex("successful_match")])) return;
+      const successDate = row[colIndex("opt_out_timestamp")] || row[colIndex("timestamp")];
+      if (new Date(successDate) >= sinceDate) count++;
+    });
+  });
+  return count;
+}
+
+// How many of the rows countActiveReceiveRowsByCategory() counts are new
+// since sinceDate — same OPT_OUT_ACTIVE filter as that function, dated by
+// submission timestamp (a request has no opt_out_timestamp until it stops
+// being active).
+function countNewActiveReceiveRowsSince(receiveRowsByCategory, sinceDate) {
+  let count = 0;
+  Object.keys(receiveRowsByCategory).forEach(category => {
+    receiveRowsByCategory[category].forEach(row => {
+      if (row[colIndex("opt_out_status")] !== OPT_OUT_ACTIVE) return;
+      if (new Date(row[colIndex("timestamp")]) >= sinceDate) count++;
+    });
+  });
+  return count;
 }
 
 // Overlaid line chart: one line per category, tracking successful donations
