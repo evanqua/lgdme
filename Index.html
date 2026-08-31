@@ -159,10 +159,10 @@
     if (!newCount) return;
     const el = document.getElementById(elementId);
     el.innerHTML = '';
-    const arrow = document.createElement('span');
-    arrow.setAttribute('aria-hidden', 'true');
-    arrow.textContent = '↑';
-    el.appendChild(arrow);
+    const plus = document.createElement('span');
+    plus.setAttribute('aria-hidden', 'true');
+    plus.textContent = '+';
+    el.appendChild(plus);
     el.appendChild(document.createTextNode(newCount));
     el.setAttribute('aria-label', newCount + ' added since midnight');
     el.style.display = 'flex';

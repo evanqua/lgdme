@@ -18,7 +18,7 @@ in the README for how versions map to git tags and Apps Script deployments.
 ### Added
 - Home page stats strip (`Index.html`) now shows a small green "new since
   midnight" badge on the Successful Exchanges and Active Requests numbers,
-  with an up arrow and count of how many of that total were added since the
+  with a plus sign and count of how many of that total were added since the
   start of the current day (script timezone). Hidden when nothing has been
   added yet today. Closes #4.
 - `SETUP.md` section 3 now documents three ways to get the code, ordered by
