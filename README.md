@@ -13,7 +13,7 @@ Status: active development, pre-release (`0.x`, no API/schema stability guarante
 
 ## Origin and support
 
-Development of this system was led and sponsored by [ReCARES](https://recares.org), a nonprofit durable medical equipment reuse program in the San Francisco Bay Area. ReCARES built this system to run its own donation matching program, then made it open source in full, with the hope that it can serve as a foundation for other communities: reducing waste and getting essential medical equipment to people who need it, without every organization having to build this kind of system from scratch.
+Development of this system was led and sponsored by [ReCARES](https://www.recares.org/), a nonprofit durable medical equipment reuse program in the San Francisco Bay Area. ReCARES built this system to run its own donation matching program, then made it open source in full, with the hope that it can serve as a foundation for other communities: reducing waste and getting essential medical equipment to people who need it, without every organization having to build this kind of system from scratch.
 
 If this system has benefited you, your community, or your organization, consider supporting ReCARES's ongoing work. Donation information is available at [recares.org](https://recares.org). Contributions there help fund the continued maintenance and development of this project as well as ReCARES's own equipment reuse program.
 
