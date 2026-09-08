@@ -63,7 +63,7 @@
     <p class="note">No password has been configured for this instance yet. Set the <code>ANALYTICS_PASSWORD</code> script property (Project Settings &gt; Script Properties in the Apps Script editor) to enable access.</p>
   <? } else { ?>
     <? if (showError) { ?><p class="error">Incorrect password.</p><? } ?>
-    <form method="post" action="<?!= ScriptApp.getService().getUrl() ?>">
+    <form method="post" action="<?!= ScriptApp.getService().getUrl() ?>" target="_top">
       <input type="hidden" name="view" value="analytics">
       <label for="analyticsPassword">Password</label>
       <input type="password" id="analyticsPassword" name="password" autofocus>
