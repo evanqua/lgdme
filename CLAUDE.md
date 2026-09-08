@@ -34,7 +34,7 @@ parallel intake path.
 | `PortalServer.js` | Token-based self-service portal backend (`Portal.html`): report match outcome, report no-match, confirm receipt, renew listing, feedback. |
 | `OptOutServer.js` | Token-less opt-out backend (`OptOut.html`, `?view=optout`) for someone without a handy notification email. Looks a row up by email + item instead of token. |
 | `HomeServer.js` | Public no-login home page view model (`Index.html`): category-level status only, never exact counts or individual listings; also builds the internal-only analytics view model (`Analytics.html`, `?view=analytics`, unlinked). |
-| `Config.js` | Script-Properties-backed org identity (`ORG_NAME`, `CONTACT_EMAIL`, `EXPIRATION_DAYS`, `HIGH_DEMAND_THRESHOLD`) with code-level fallback defaults. |
+| `Config.js` | Script-Properties-backed org identity (`ORG_NAME`, `CONTACT_EMAIL`, `EXPIRATION_DAYS`, `HIGH_DEMAND_THRESHOLD`) with code-level fallback defaults, plus `ANALYTICS_PASSWORD` (no fallback — see below) gating `?view=analytics`. |
 | `Installer.js` | `setupNewInstance()`: idempotent one-time setup (seeds config, creates sheets, installs daily triggers) for a freshly cloned Apps Script project. |
 | `Triggers.js` | Daily time-based trigger functions: `dailySubmissionMaintenance` (expiration + stale-listing nudges) and `runAuditFlags` (manual-review-only audit flagging). Not auto-installed except via `setupNewInstance()`. |
 | `Receipts.js` | PDF donation receipt generation, triggered from `PortalServer.js`'s confirm-receipt flow. Ships with placeholder tax/legal wording. |
@@ -61,6 +61,12 @@ a `.js` and `.html` file can't share a base name, hence names like
   `opt_out_status`.
 - **`getOrgName()`/`getContactEmail()`/etc. (`Config.js`), not hardcoded
   strings**, for anything user-facing that should vary per organization.
+- **`?view=analytics` (`WebApp.js`'s `renderAnalyticsPage()`) must stay
+  gated on `getAnalyticsPassword()` (`Config.js`), and `buildAnalyticsViewModel()`
+  must only ever be called after that check passes.** The password check
+  exists specifically to keep that call — and the submitter names/emails it
+  returns — off the wire for an unauthorized request; computing it
+  unconditionally and only hiding the result client-side would defeat that.
 
 ## Placeholders that ship intentionally unfinished
 

@@ -122,8 +122,11 @@ Open the project (`clasp open`), then go to **Project Settings > Script Properti
 | `CONTACT_EMAIL` | Shown wherever a "contact us" link appears | `contact@example.org` |
 | `EXPIRATION_DAYS` | How long a listing stays active before it expires, and how the "still looking?" nudge timing is scaled | `60` |
 | `HIGH_DEMAND_THRESHOLD` | Minimum number of active unmatched requests before the home page's "High Demand" badge shows for a category | `5` |
+| `ANALYTICS_PASSWORD` | Password required to view `?view=analytics` (`Analytics.html`) | None — see below |
 
-You do not have to set these before step 8. `setupNewInstance()` seeds all four with the defaults above if you skip this, and you can edit them at any time afterward without redeploying code (Script Properties are read live, not baked into a deployment). Just do not let the placeholder defaults reach real users; nobody should ever see "Your Organization LgDME System" in a live email.
+You do not have to set the first four before step 8. `setupNewInstance()` seeds them with the defaults above if you skip this, and you can edit them at any time afterward without redeploying code (Script Properties are read live, not baked into a deployment). Just do not let the placeholder defaults reach real users; nobody should ever see "Your Organization LgDME System" in a live email.
+
+`ANALYTICS_PASSWORD` is different: it has no default and `setupNewInstance()` does not seed it, because a password baked into this public template's source would defeat the point. Until you set it yourself, `?view=analytics` shows a "not configured" message instead of a login form, and stays inaccessible either way. Set it here (Project Settings > Script Properties, same as the others) any time before you plan to use the analytics page; anyone who has both the URL and this password can see it, including individually identifiable submitter info, so treat it as a real credential — share it out of band, not in an email or chat message that also contains the link.
 
 ### SiteConfig.js
 
