@@ -21,15 +21,23 @@ function doGet(e) {
   if (params.view === "optout") return renderOptOutPage(null);
   if (params.view === "intake") return renderIntakeForm(params);
   // Internal-only charts moved off the public home page (build plan Step 5)
-  // — reachable only by whoever already has this exact URL; not linked from
-  // the home page, nav, or anywhere else. No auth — obscurity only.
-  if (params.view === "analytics") return renderAnalyticsPage();
+  // — reachable only by whoever already has this exact URL, and now also
+  // gated by the ANALYTICS_PASSWORD script property (see Config.js).
+  if (params.view === "analytics") return renderAnalyticsPage(params);
 
   // Default: the home page (HomeServer.js/Index.html). This used to be
   // ?view=browse with the intake form as the default — swapped so a
   // first-time visitor lands on an explanatory page, not a bare form.
   // Nothing special-cases ?view=browse anymore; it just falls through here too.
   return renderHomePage();
+}
+
+// The analytics password form (below) submits via POST so the password
+// doesn't end up sitting in the URL bar or browser history the way a GET
+// query param would. Every other view here is GET-only (plain links/redirects),
+// so this just hands POST requests to the same router rather than duplicating it.
+function doPost(e) {
+  return doGet(e);
 }
 
 // Public, no-login home page (HomeServer.js/Index.html) — this is the link to
@@ -45,11 +53,30 @@ function renderHomePage() {
 
 // Internal-only analytics view (HomeServer.js/Analytics.html) — the
 // successful-donations and monthly-trend charts that used to live on the
-// public home page, now reachable only via ?view=analytics. Not linked from
-// the home page or anywhere else; no authentication, obscurity only.
-function renderAnalyticsPage() {
+// public home page, now reachable only via ?view=analytics and gated by the
+// ANALYTICS_PASSWORD script property (Config.js). Not linked from the home
+// page or anywhere else, so this is a second layer on top of the URL not
+// being discoverable, not a replacement for it — see SETUP.md before relying
+// on it for anything more sensitive than "keep casual visitors out."
+//
+// Deliberately simple: a plain shared password compared server-side, no
+// per-user accounts or sessions. The page re-prompts on every visit rather
+// than remembering you across page loads (no cookie/session mechanism), and
+// buildAnalyticsViewModel() (the sensitive part — it includes submitters'
+// names/emails) is only ever computed and sent to the browser once the
+// password check below has passed, so a wrong/missing password never ships
+// the data down for a client-side gate to fail at.
+function renderAnalyticsPage(params) {
+  params = params || {};
+  const configuredPassword = getAnalyticsPassword();
+  const attempted = Object.prototype.hasOwnProperty.call(params, "password");
+  const authorized = configuredPassword !== "" && params.password === configuredPassword;
+
   const template = HtmlService.createTemplateFromFile("Analytics");
-  template.analyticsDataJson = JSON.stringify(buildAnalyticsViewModel());
+  template.authorized = authorized;
+  template.passwordConfigured = configuredPassword !== "";
+  template.showError = attempted && !authorized;
+  template.analyticsDataJson = authorized ? JSON.stringify(buildAnalyticsViewModel()) : "null";
   return template.evaluate()
     .setTitle(getOrgName() + " — Analytics")
     .addMetaTag("viewport", "width=device-width, initial-scale=1");

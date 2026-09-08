@@ -16,6 +16,11 @@ in the README for how versions map to git tags and Apps Script deployments.
 ## [Unreleased]
 
 ### Added
+- `?view=analytics` (`Analytics.html`/`WebApp.js`) is now gated behind a
+  password, read from the new `ANALYTICS_PASSWORD` Script Property
+  (`Config.js`; no default — `setupNewInstance()` does not seed it, so it
+  stays inaccessible until an adopter sets one). Previously relied on
+  obscurity alone (not linked anywhere, URL-only). Closes #6.
 - Home page stats strip (`Index.html`) now shows a small green "new since
   midnight" badge on the Successful Exchanges and Active Requests numbers,
   with a plus sign and count of how many of that total were added since the

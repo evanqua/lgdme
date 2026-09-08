@@ -47,7 +47,31 @@
   table.recent-table td.feedback-cell { max-width: 220px; white-space: pre-wrap; color: #444; }
   table.recent-table td.status-opted-out { color: #1a7a3c; }
   table.recent-table td.status-expired { color: #a35a00; }
+
+  .login-gate { max-width: 320px; }
+  .login-gate label { display: block; font-size: 0.9rem; margin-bottom: 6px; }
+  .login-gate input[type="password"] { width: 100%; padding: 6px 8px; font-size: 1rem; box-sizing: border-box; margin-bottom: 12px; }
+  .login-gate button { padding: 6px 14px; font-size: 0.95rem; cursor: pointer; }
+  .login-gate p.error { color: #a3272c; font-size: 0.85rem; }
 </style>
+
+<? if (!authorized) { ?>
+<h1>Internal analytics — <?= getOrgName() ?></h1>
+<p class="note">Password-protected. Not linked from the public site — reachable only by direct URL.</p>
+<div class="login-gate">
+  <? if (!passwordConfigured) { ?>
+    <p class="note">No password has been configured for this instance yet. Set the <code>ANALYTICS_PASSWORD</code> script property (Project Settings &gt; Script Properties in the Apps Script editor) to enable access.</p>
+  <? } else { ?>
+    <? if (showError) { ?><p class="error">Incorrect password.</p><? } ?>
+    <form method="post" action="<?!= ScriptApp.getService().getUrl() ?>">
+      <input type="hidden" name="view" value="analytics">
+      <label for="analyticsPassword">Password</label>
+      <input type="password" id="analyticsPassword" name="password" autofocus>
+      <button type="submit">View analytics</button>
+    </form>
+  <? } ?>
+</div>
+<? } else { ?>
 
 <h1>Internal analytics — <?= getOrgName() ?></h1>
 <p class="note">Not linked from the public site — reachable only by direct URL. Contains individually identifiable submitter info (the recent-opt-outs feed below) as well as historical aggregates — unlike the public home page, which is deliberately limited to category-level status only.</p>
@@ -417,3 +441,4 @@
     document.getElementById('timeToOptOutTable').appendChild(buildTable(headers, rows));
   })();
 </script>
+<? } ?>

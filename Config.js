@@ -34,6 +34,15 @@ function getHighDemandThreshold() {
   return parseInt(getConfigValue("HIGH_DEMAND_THRESHOLD"), 10);
 }
 
+// Deliberately not in CONFIG_DEFAULTS above: every other key there is a
+// public-facing default that's fine to ship in this open-source template,
+// but a hardcoded default password would ship as a public secret. Access to
+// ?view=analytics (WebApp.js) stays denied until an adopter sets this Script
+// Property themselves; see SETUP.md.
+function getAnalyticsPassword() {
+  return PropertiesService.getScriptProperties().getProperty("ANALYTICS_PASSWORD") || "";
+}
+
 // The new Web App intake form's URL — what every "resubmit"/"list a new
 // item" link in outbound email now points to, in both systems, now that the
 // old standalone Google Form links have been retired.
