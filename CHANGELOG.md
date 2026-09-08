@@ -46,6 +46,13 @@ in the README for how versions map to git tags and Apps Script deployments.
   setting. Closes #1.
 
 ### Fixed
+- The `?view=analytics` password form (`Analytics.html`, added just above)
+  was missing `target="_top"` on its `<form>`, so submitting it tried to
+  navigate within Apps Script's sandboxed serving iframe to a
+  `script.google.com` URL and failed with "script.google.com refused to
+  connect" — the same failure mode every other cross-page link in this app
+  (`IntakeForm.html`, `OptOut.html`, `Index.html`) already works around with
+  `target="_top"`. Closes #8.
 - `ARCHITECTURE.md`'s `HomeServer.js` row described the two bar charts as
   part of the public home page's view model; they were moved to the
   internal-only analytics view model (`?view=analytics`) before this repo
