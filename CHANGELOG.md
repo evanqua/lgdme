@@ -26,6 +26,10 @@ in the README for how versions map to git tags and Apps Script deployments.
   with a plus sign and count of how many of that total were added since the
   start of the current day (script timezone). Hidden when nothing has been
   added yet today. Closes #4.
+- Listing notification emails (`Matching.js`'s `sendSubmitterEmail` and
+  `sendMatchAlertEmail`) now include an opt-out reminder, with a hyperlink to
+  the same token-based opt-out link already in the footer, right after the
+  sentence describing what was found.
 - `SETUP.md` section 3 now documents three ways to get the code, ordered by
   how well future updates can be pulled in later: a plain clone, a public
   GitHub fork (with `origin`/`upstream` remotes set up automatically via
