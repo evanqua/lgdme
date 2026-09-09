@@ -155,7 +155,8 @@ function sendSubmitterEmail(newRow, matches) {
   const subject = matches.length ? `Matches found for your ${label}` : `No current matches for your ${label} yet`;
   let body = `<p>Hello ${name},</p>`;
   if (matches.length) {
-    body += `<p>We found matches for your <b>${label}</b>:</p>${generateMatchTable(matches, null)}`;
+    body += `<p>We found matches for your <b>${label}</b>:</p>
+    <p>If you would like to remove your listing and opt out of future communications, please follow <a href="${optOutUrl}">this link</a>.</p>${generateMatchTable(matches, null)}`;
   } else {
     body += `<p>No current matches for <b>${label}</b>. We will notify you if a new match appears.</p>`;
   }
@@ -171,6 +172,7 @@ function sendMatchAlertEmail(subscriberRow, matches, highlightSubmissionId) {
   const optOutUrl = ScriptApp.getService().getUrl() + "?token=" + subscriberRow[colIndex("token")];
   const body = `<p>Hello ${name},</p>
     <p>A new match for your <b>${label}</b> has been found!</p>
+    <p>If you would like to remove your listing and opt out of future communications, please follow <a href="${optOutUrl}">this link</a>.</p>
     ${generateMatchTable(matches, highlightSubmissionId)}
     <hr>
     <p style="color:gray;font-size:12px;"><a href="${optOutUrl}">Opt Out Form</a></p>`;
