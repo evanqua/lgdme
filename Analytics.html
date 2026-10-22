@@ -56,8 +56,8 @@
 </style>
 
 <? if (!authorized) { ?>
-<h1>Internal analytics — <?= getOrgName() ?></h1>
-<p class="note">Password-protected. Not linked from the public site — reachable only by direct URL.</p>
+<h1>Internal analytics for <?= getOrgName() ?></h1>
+<p class="note">Password protected. Not linked from the public site.</p>
 <div class="login-gate">
   <? if (!passwordConfigured) { ?>
     <p class="note">No password has been configured for this instance yet. Set the <code>ANALYTICS_PASSWORD</code> script property (Project Settings &gt; Script Properties in the Apps Script editor) to enable access.</p>
@@ -73,21 +73,21 @@
 </div>
 <? } else { ?>
 
-<h1>Internal analytics — <?= getOrgName() ?></h1>
-<p class="note">Not linked from the public site — reachable only by direct URL. Contains individually identifiable submitter info (the recent-opt-outs feed below) as well as historical aggregates — unlike the public home page, which is deliberately limited to category-level status only.</p>
+<h1>Internal analytics - <?= getOrgName() ?></h1>
+<p class="note">Not linked from the public site. Unlike the public home page, this page shows names and emails (in recent opt-outs) as well as totals.</p>
 
 <div class="chart-section">
   <h2>Recent opt-outs</h2>
-  <p class="chart-caption">Most recent <?= RECENT_OPT_OUTS_LIMIT ?> — newest first. Only includes opt-outs recorded since the opt_out_timestamp column was added; older ones have no reliable date to sort by.</p>
+  <p class="chart-caption">Newest first, up to <?= RECENT_OPT_OUTS_LIMIT ?>. Older opt-outs with no recorded date are not shown.</p>
   <div id="recentOptOutsTable"></div>
 </div>
 
 <div class="chart-section">
   <h2>Successful donations</h2>
   <p class="all-time-total" id="allTimeTotal"></p>
-  <p class="note">All-time count, computed directly from rows marked as a confirmed successful donation — independent of the windowed chart below and of whether a row's item matches a known category.</p>
+  <p class="note">All-time count of donations confirmed as successful.</p>
   <p class="chart-caption" id="successCaption"></p>
-  <p class="chart-hint">One line per item, plus the bold total — hover or tap a line to see which item it is.</p>
+  <p class="chart-hint">One line per item, plus a bold total. Hover or tap a line to see the item.</p>
   <div class="line-chart-wrap">
     <svg id="successChart" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet"></svg>
     <div id="successTooltip" class="chart-tooltip" style="display:none;"></div>
@@ -111,8 +111,15 @@
 
 <div class="chart-section">
   <h2>Time to opt out (days)</h2>
-  <p class="chart-caption">From submission to opt-out — only rows with a recorded opt-out date are included</p>
+  <p class="chart-caption">Days from submission to opt-out. Only listings with a recorded opt-out date are included.</p>
   <div id="timeToOptOutTable"></div>
+</div>
+
+<div class="chart-section">
+  <h2>Estimated value by item</h2>
+  <p class="chart-caption">Requested and listed counts include only active listings (not expired or opted out). Dollar figures are rough estimates per item.</p>
+  <div id="valueTable"></div>
+  <p class="all-time-total" id="valueSummary"></p>
 </div>
 
 <script>
@@ -120,7 +127,7 @@
 
   document.getElementById('allTimeTotal').textContent = DATA.successfulDonationsChart.allTimeTotal + ' total successful donations (all time)';
 
-  // Recent opt-outs feed — one row per person, newest first, with the
+  // Recent opt-outs feed - one row per person, newest first, with the
   // outcome and any feedback they left. See buildRecentOptOuts (HomeServer.js).
   (function renderRecentOptOuts() {
     const rows = DATA.recentOptOuts;
@@ -163,7 +170,7 @@
 
   // Overlaid line-per-category chart (successful donations, i.e. confirmed via
   // the opt-out/check-in flow, not just submitted) plus a bold "Total" line.
-  // No color-coded key by design — with up to 15 categories a legend would be
+  // No color-coded key by design - with up to 15 categories a legend would be
   // both unreadable and impossible to keep colorblind-safe, so identity is
   // conveyed by hovering/clicking a line instead (and via the table fallback
   // below, so the data is never gated behind hover for anyone who can't).
@@ -192,7 +199,7 @@
 
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-    // Gridlines + y-axis ticks (0, half, max) — recessive hairlines, not data ink.
+    // Gridlines + y-axis ticks (0, half, max) - recessive hairlines, not data ink.
     [0, 0.5, 1].forEach(function (frac) {
       const val = Math.round(niceMax * frac);
       const y = yFor(val);
@@ -202,7 +209,7 @@
       svg.appendChild(t);
     });
 
-    // Month labels along the bottom — first/last anchor inward so they don't
+    // Month labels along the bottom - first/last anchor inward so they don't
     // clip past the chart edge.
     months.forEach(function (label, i) {
       const anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
@@ -318,7 +325,7 @@
       }
     });
 
-    // Table fallback — same data reachable without hovering/tapping a line,
+    // Table fallback - same data reachable without hovering/tapping a line,
     // for anyone who can't (or won't) rely on the interaction above.
     const tableBtn = document.getElementById('toggleTableBtn');
     const tableDiv = document.getElementById('successTable');
@@ -382,9 +389,9 @@
     monthLabelsEl.appendChild(div);
   });
 
-  function fmtCount(n) { return n == null ? '—' : n; }
-  function fmtPct(r) { return r == null ? '—' : (r * 100).toFixed(1) + '%'; }
-  function fmtDays(v) { return v == null ? '—' : v; }
+  function fmtCount(n) { return n == null ? 'n/a' : n; }
+  function fmtPct(r) { return r == null ? 'n/a' : (r * 100).toFixed(1) + '%'; }
+  function fmtDays(v) { return v == null ? 'n/a' : v; }
 
   function buildTable(headers, rows) {
     const table = document.createElement('table');
@@ -407,6 +414,26 @@
     });
     return table;
   }
+
+  // Estimated value by item: per-item counts and per-item value estimates
+  // (SiteConfig.js's ITEM_VALUE_ESTIMATES), with a totals row. Items with no
+  // estimate show n/a and add nothing to the dollar totals.
+  (function renderValueTable() {
+    const v = DATA.valueByItem;
+    const fmtUsd = function (n) { return n == null ? 'n/a' : '$' + n.toLocaleString('en-US'); };
+    const headers = ['Item', 'Actively requested', 'Actively listed', 'Successfully donated', 'Est. USD lower', 'Est. USD upper', 'Donated value lower', 'Donated value upper'];
+    const rows = v.rows.map(function (r) {
+      return [r.category, r.requested, r.listed, r.donated, fmtUsd(r.lower), fmtUsd(r.upper), fmtUsd(r.donatedLower), fmtUsd(r.donatedUpper)];
+    });
+    rows.push(['Total', v.totals.requested, v.totals.listed, v.totals.donated, '', '', fmtUsd(v.totals.donatedLower), fmtUsd(v.totals.donatedUpper)]);
+    const table = buildTable(headers, rows);
+    table.className = 'success-table';
+    table.lastChild.style.fontWeight = 'bold';
+    document.getElementById('valueTable').appendChild(table);
+    document.getElementById('valueSummary').textContent =
+      'Estimated total saved: ' + fmtUsd(v.totals.donatedLower) + ' to ' + fmtUsd(v.totals.donatedUpper) +
+      ' across ' + v.totals.donated + ' successful donations.';
+  })();
 
   // Listing outcomes: total/active/expired/opted-out/matched/not-matched
   // counts and rates, one row per direction plus a combined row.
@@ -433,10 +460,10 @@
       return [label, fmtCount(s.count), fmtDays(s.mean), fmtDays(s.median), fmtDays(s.p25), fmtDays(s.p75), fmtDays(s.p90)];
     };
     const rows = [
-      rowFor('Donors — with match', tto.donate.withMatch),
-      rowFor('Donors — without match', tto.donate.withoutMatch),
-      rowFor('Requesters — with match', tto.receive.withMatch),
-      rowFor('Requesters — without match', tto.receive.withoutMatch)
+      rowFor('Donors with match', tto.donate.withMatch),
+      rowFor('Donors without match', tto.donate.withoutMatch),
+      rowFor('Requesters with match', tto.receive.withMatch),
+      rowFor('Requesters without match', tto.receive.withoutMatch)
     ];
     document.getElementById('timeToOptOutTable').appendChild(buildTable(headers, rows));
   })();

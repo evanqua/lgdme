@@ -30,3 +30,15 @@ const ITEM_CATEGORIES = [
 // this in isn't a hard requirement. Populate it with your own service area's
 // cities/towns if you want a dropdown instead.
 const SERVICE_AREA_CITIES = [];
+
+// Rough per-item value estimates in USD, used only by the analytics page's
+// "Estimated value by item" table (HomeServer.js's buildValueByItem). Keyed by
+// category name (must match ITEM_CATEGORIES exactly). A category not listed
+// here shows "n/a" and adds nothing to the dollar totals. Illustrative
+// numbers; replace with your own.
+const ITEM_VALUE_ESTIMATES = {
+  "Hospital Bed": { lower: 500, upper: 3500 },
+  "Wheelchair": { lower: 100, upper: 1000 },
+  "Mobility Scooter": { lower: 500, upper: 2500 },
+  "Miscellaneous Large DME": { lower: 100, upper: 2000 }
+};

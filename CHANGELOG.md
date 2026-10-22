@@ -15,7 +15,14 @@ in the README for how versions map to git tags and Apps Script deployments.
 
 ## [Unreleased]
 
+### Changed
+- Analytics page text simplified and em dashes removed.
+
 ### Added
+- Analytics page: "Estimated value by item" table with per-item active
+  requested/listed counts, successful donations, low/high USD estimates, and
+  the donated value, plus total estimated saved. Estimates live in
+  `SiteConfig.js`'s `ITEM_VALUE_ESTIMATES`; items without one show n/a.
 - `?view=analytics` (`Analytics.html`/`WebApp.js`) is now gated behind a
   password, read from the new `ANALYTICS_PASSWORD` Script Property
   (`Config.js`; no default — `setupNewInstance()` does not seed it, so it

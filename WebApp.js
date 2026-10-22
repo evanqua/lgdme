@@ -78,7 +78,7 @@ function renderAnalyticsPage(params) {
   template.showError = attempted && !authorized;
   template.analyticsDataJson = authorized ? JSON.stringify(buildAnalyticsViewModel()) : "null";
   return template.evaluate()
-    .setTitle(getOrgName() + " — Analytics")
+    .setTitle(getOrgName() + " Analytics")
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 

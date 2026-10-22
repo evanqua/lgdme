@@ -118,6 +118,7 @@ function buildAnalyticsViewModel() {
     recentOptOuts: buildRecentOptOuts(data),
     successfulDonationsChart: buildSuccessfulDonationsChart(data, categories, months),
     monthlyChart: buildMonthlyTotalChart(data, months),
+    valueByItem: buildValueByItem(data, categories),
     optOutTotals: buildOptOutTotals(data),
     timeToOptOut: buildTimeToOptOutStats(data)
   };
@@ -395,7 +396,7 @@ function buildSuccessfulDonationsChart(data, categories, months) {
   const maxCount = Math.max(1, ...totalCounts, ...series.map(s => Math.max(...s.counts)));
 
   return {
-    windowLabel: months[0].label + " – " + months[months.length - 1].label,
+    windowLabel: months[0].label + " to " + months[months.length - 1].label,
     monthLabels: months.map(m => m.label),
     series: series,
     totalCounts: totalCounts,
@@ -406,6 +407,61 @@ function buildSuccessfulDonationsChart(data, categories, months) {
     // public home page) — this is the number to trust as "the total."
     allTimeTotal: countAllTimeSuccessfulDonations()
   };
+}
+
+// One row per category: active requested/listed counts (Active status and not
+// past notification_expiry, same rule as findActiveMatches), confirmed
+// successful donations, and the value of those donations using
+// SiteConfig.js's ITEM_VALUE_ESTIMATES. A category with no estimate gets null
+// dollar fields and adds nothing to the totals. Donations under an unknown
+// item_type show up as an "Other" row (no estimate) so counts still add up.
+function buildValueByItem(data, categories) {
+  const now = new Date();
+  const stats = {};
+  categories.forEach(c => { stats[c] = { requested: 0, listed: 0, donated: 0 }; });
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const direction = row[colIndex("donate_or_receive")];
+    if (direction !== "Donate" && direction !== "Receive") continue;
+    const itemType = row[colIndex("item_type")];
+    const isDonated = direction === "Donate" && isConfirmedSuccess(row[colIndex("successful_match")]);
+    const key = categories.indexOf(itemType) === -1 ? OTHER_CATEGORY_LABEL : itemType;
+    if (!stats[key]) {
+      if (!isDonated) continue;
+      stats[key] = { requested: 0, listed: 0, donated: 0 };
+    }
+    const s = stats[key];
+    if (isDonated) s.donated++;
+    const expiry = row[colIndex("notification_expiry")];
+    const isActive = row[colIndex("opt_out_status")] === OPT_OUT_ACTIVE && !(expiry && new Date(expiry) < now);
+    if (!isActive) continue;
+    if (direction === "Donate") s.listed++; else s.requested++;
+  }
+
+  const totals = { requested: 0, listed: 0, donated: 0, donatedLower: 0, donatedUpper: 0 };
+  const rows = Object.keys(stats).map(category => {
+    const s = stats[category];
+    const est = ITEM_VALUE_ESTIMATES[category] || null;
+    totals.requested += s.requested;
+    totals.listed += s.listed;
+    totals.donated += s.donated;
+    if (est) {
+      totals.donatedLower += s.donated * est.lower;
+      totals.donatedUpper += s.donated * est.upper;
+    }
+    return {
+      category: category,
+      requested: s.requested,
+      listed: s.listed,
+      donated: s.donated,
+      lower: est ? est.lower : null,
+      upper: est ? est.upper : null,
+      donatedLower: est ? s.donated * est.lower : null,
+      donatedUpper: est ? s.donated * est.upper : null
+    };
+  });
+  return { rows: rows, totals: totals };
 }
 
 // A "successful match" value that's neither blank nor the literal "No" (see
