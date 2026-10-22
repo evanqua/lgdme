@@ -12,6 +12,15 @@ const OPT_OUT_EXPIRED = "Expired";
 // server files rather than redefined per file.
 const MATCH_VALUE_UNSURE = "__unsure__";
 
+// What successful_match stores when the reporter matched with someone but
+// could not pick who (see resolveMatchedSubmissionAndNotify, PortalServer.js).
+const MATCH_TEXT_UNSURE = "Yes (not sure who)";
+
+// How long a listing closed with MATCH_TEXT_UNSURE stays selectable in the
+// opt-out page's "who did you match with" list (OptOutServer.js), so the
+// other party still has a chance to name them. Never used for emails.
+const UNSURE_MATCH_VISIBLE_DAYS = 14;
+
 // Proposed flat column list (your requested columns + additions called out below):
 //   - last_name: kept because Step 1 said not to drop existing questions; legacy
 //     had "Last name (not shared)" and nothing in the new schema replaced it.

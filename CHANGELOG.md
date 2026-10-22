@@ -19,6 +19,14 @@ in the README for how versions map to git tags and Apps Script deployments.
 - Analytics page text simplified and em dashes removed.
 
 ### Added
+- Opt-out page: someone who opted out saying they did not know who they
+  matched with stays in the "who did you match with" list for 14 more days
+  (`OptOutServer.js`'s `findRecentlyClosedUnsureMatches`), so the other party
+  can still name them. They are never shown as a contact in notification
+  emails after opting out.
+- Match counts (home page total, analytics charts and value table) now also
+  count a recipient who reported receiving an item from an unknown donor,
+  unless that donor also reported them (`HomeServer.js`'s `isCountedDonation`).
 - Analytics page: "Estimated value by item" table with per-item active
   requested/listed counts, successful donations, low/high USD estimates, and
   the donated value, plus total estimated saved. Estimates live in

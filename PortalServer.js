@@ -59,7 +59,7 @@ function optOutSubmissionsRow(found, wasSuccessful, matchedContact, feedback) {
 // entry points into "I found a match" behave identically.
 function resolveMatchedSubmissionAndNotify(matchedSubmissionId, notifierIdentifier, itemName) {
   if (!matchedSubmissionId || matchedSubmissionId === MATCH_VALUE_UNSURE) {
-    return "Yes (not sure who)";
+    return MATCH_TEXT_UNSURE;
   }
   optOutSubmissionsMatchedPartyAndNotify(matchedSubmissionId, notifierIdentifier, itemName);
   // Kept as the raw submission_id (rather than a human label) so this cell

@@ -52,6 +52,25 @@ function optOutSubmitterRowExists(email, direction, item) {
   return false;
 }
 
+// Opted-out rows of the opposite direction whose owner reported a match but
+// did not know who with, closed within the last UNSURE_MATCH_VISIBLE_DAYS.
+// For the opt-out match dropdown only; never feed this into an email.
+function findRecentlyClosedUnsureMatches(data, itemType, direction) {
+  const cutoff = Date.now() - UNSURE_MATCH_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+  const matches = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (row[colIndex("item_type")] !== itemType) continue;
+    if (row[colIndex("donate_or_receive")] !== direction) continue;
+    if (row[colIndex("opt_out_status")] !== OPT_OUT_OPTED_OUT) continue;
+    if ((row[colIndex("successful_match")] || "").toString().trim() !== MATCH_TEXT_UNSURE) continue;
+    const closedAt = new Date(row[colIndex("opt_out_timestamp")]).getTime();
+    if (!closedAt || closedAt < cutoff) continue;
+    matches.push(row);
+  }
+  return matches;
+}
+
 function previewOptOutMatchesInternal(direction, item, email) {
   if (!optOutSubmitterRowExists(email, direction, item)) {
     return { success: true, verified: false, matches: [] };
@@ -60,7 +79,12 @@ function previewOptOutMatchesInternal(direction, item, email) {
   const targetAction = direction === "Donate" ? "Receive" : "Donate";
   const sheet = getOrCreateSubmissionsSheet();
   const data = sheet.getDataRange().getValues();
-  const matches = findActiveMatches(data, item, targetAction).map(row => ({
+  // Dropdown only: recently opted-out people who did not know who they
+  // matched with stay selectable for UNSURE_MATCH_VISIBLE_DAYS. Emails use
+  // findActiveMatches alone, so these people are never shown as contacts.
+  const selectable = findActiveMatches(data, item, targetAction)
+    .concat(findRecentlyClosedUnsureMatches(data, item, targetAction));
+  const matches = selectable.map(row => ({
     value: row[colIndex("submission_id")],
     label: submissionMatchLabel(row)
   }));

@@ -85,7 +85,7 @@ function buildHomeViewModel() {
       // countNewSuccessfulDonationsSince/countNewActiveReceiveRowsSince) so
       // the badge always reads as "this is the part of the total that's new
       // today," never a differently-defined number.
-      newExchangesToday: countNewSuccessfulDonationsSince(donateRowsByCategory, sinceMidnight),
+      newExchangesToday: countNewSuccessfulDonationsSince(donateRowsByCategory, receiveRowsByCategory, sinceMidnight),
       newRequestsToday: countNewActiveReceiveRowsSince(receiveRowsByCategory, sinceMidnight)
     },
     // Exposed only as the raw threshold number for the "Current categories"
@@ -279,12 +279,11 @@ function buildDonateUrl(category) {
 function countAllTimeSuccessfulDonations() {
   const sheet = getOrCreateSubmissionsSheet();
   const data = sheet.getDataRange().getValues();
+  const claimed = claimedReceiveIds(data);
 
   let count = 0;
   for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    if (row[colIndex("donate_or_receive")] !== "Donate") continue;
-    if (isConfirmedSuccess(row[colIndex("successful_match")])) count++;
+    if (isCountedDonation(data[i], claimed)) count++;
   }
   return count;
 }
@@ -322,11 +321,12 @@ function startOfTodayLocal() {
 // opt_out_timestamp-falling-back-to-timestamp date convention as
 // buildSuccessfulDonationsChart, so this is exactly "how much of that total
 // is from today," not a differently-defined count.
-function countNewSuccessfulDonationsSince(donateRowsByCategory, sinceDate) {
+function countNewSuccessfulDonationsSince(donateRowsByCategory, receiveRowsByCategory, sinceDate) {
   let count = 0;
+  const claimed = claimedReceiveIds([null].concat(...Object.values(donateRowsByCategory)));
   Object.keys(donateRowsByCategory).forEach(category => {
-    donateRowsByCategory[category].forEach(row => {
-      if (!isConfirmedSuccess(row[colIndex("successful_match")])) return;
+    donateRowsByCategory[category].concat(receiveRowsByCategory[category]).forEach(row => {
+      if (!isCountedDonation(row, claimed)) return;
       const successDate = row[colIndex("opt_out_timestamp")] || row[colIndex("timestamp")];
       if (new Date(successDate) >= sinceDate) count++;
     });
@@ -372,11 +372,11 @@ function buildSuccessfulDonationsChart(data, categories, months) {
   const perCategoryCounts = {};
   categories.forEach(c => { perCategoryCounts[c] = months.map(() => 0); });
   perCategoryCounts[OTHER_CATEGORY_LABEL] = months.map(() => 0);
+  const claimed = claimedReceiveIds(data);
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    if (row[colIndex("donate_or_receive")] !== "Donate") continue;
-    if (!isConfirmedSuccess(row[colIndex("successful_match")])) continue;
+    if (!isCountedDonation(row, claimed)) continue;
 
     const itemType = row[colIndex("item_type")];
     const bucketKey = perCategoryCounts[itemType] ? itemType : OTHER_CATEGORY_LABEL;
@@ -409,6 +409,30 @@ function buildSuccessfulDonationsChart(data, categories, months) {
   };
 }
 
+// Submission ids that a donor's report names as their match. A recipient who
+// reported "Yes (not sure who)" counts as a donation (isCountedDonation), but
+// not if their donor also reported them, or it would be counted twice.
+function claimedReceiveIds(data) {
+  const claimed = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (row[colIndex("donate_or_receive")] !== "Donate") continue;
+    const v = (row[colIndex("successful_match")] || "").toString().trim();
+    if (v) claimed[v] = true;
+  }
+  return claimed;
+}
+
+// One match = a donor row confirmed as successful, or a recipient row that
+// reported receiving the item without knowing the donor (MATCH_TEXT_UNSURE),
+// unless that donor has since reported them (see claimedReceiveIds).
+function isCountedDonation(row, claimed) {
+  const direction = row[colIndex("donate_or_receive")];
+  const value = (row[colIndex("successful_match")] || "").toString().trim();
+  if (direction === "Donate") return isConfirmedSuccess(value);
+  return direction === "Receive" && value === MATCH_TEXT_UNSURE && !claimed[row[colIndex("submission_id")]];
+}
+
 // One row per category: active requested/listed counts (Active status and not
 // past notification_expiry, same rule as findActiveMatches), confirmed
 // successful donations, and the value of those donations using
@@ -417,6 +441,7 @@ function buildSuccessfulDonationsChart(data, categories, months) {
 // item_type show up as an "Other" row (no estimate) so counts still add up.
 function buildValueByItem(data, categories) {
   const now = new Date();
+  const claimed = claimedReceiveIds(data);
   const stats = {};
   categories.forEach(c => { stats[c] = { requested: 0, listed: 0, donated: 0 }; });
 
@@ -425,7 +450,7 @@ function buildValueByItem(data, categories) {
     const direction = row[colIndex("donate_or_receive")];
     if (direction !== "Donate" && direction !== "Receive") continue;
     const itemType = row[colIndex("item_type")];
-    const isDonated = direction === "Donate" && isConfirmedSuccess(row[colIndex("successful_match")]);
+    const isDonated = isCountedDonation(row, claimed);
     const key = categories.indexOf(itemType) === -1 ? OTHER_CATEGORY_LABEL : itemType;
     if (!stats[key]) {
       if (!isDonated) continue;
