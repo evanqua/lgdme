@@ -118,10 +118,10 @@ function optOutInternal(payload) {
   const item = (payload.item || "").trim();
   if (!email || !item) return { success: false, error: "Please fill in your email and which item you listed." };
 
-  // Walks from the most recent row backward (findSubmissionsRowByEmailAndItem,
-  // PortalServer.js) so a resubmitted/renewed listing is the one opted out,
-  // if there's more than one match for the same email + item.
-  const found = findSubmissionsRowByEmailAndItem(email, item);
+  // Their most recent Active listing in the chosen direction, if any
+  // (findOptOutRowIndex, PortalServer.js), so an older listing that's still
+  // sending emails isn't skipped for a newer one that's already closed.
+  const found = findSubmissionsRowByEmailAndItem(email, item, payload.direction);
   if (!found) {
     return {
       success: false,

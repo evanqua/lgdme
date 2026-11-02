@@ -20,20 +20,33 @@ function findSubmissionByToken(token) {
 
 // Used by the generic (token-less) opt-out page (OptOutServer.js's
 // optOutInternal) for someone who submitted through the intake form but
-// doesn't have their token link handy. Walks backward, most recent wins, so
-// a resubmitted listing is the one affected if there's more than one row for
-// the same email + item.
-function findSubmissionsRowByEmailAndItem(email, itemType) {
+// doesn't have their token link handy. See findOptOutRowIndex for which row
+// wins when there's more than one for the same email + item.
+function findSubmissionsRowByEmailAndItem(email, itemType, direction) {
   const sheet = getOrCreateSubmissionsSheet();
   const data = sheet.getDataRange().getValues();
+  const i = findOptOutRowIndex(data, email, itemType, direction);
+  return i === -1 ? null : { sheet: sheet, row: data[i], rowIndex: i + 1 };
+}
+
+// Index in data of the listing the token-less opt-out page acts on for this
+// email + item: the most recent Active one, else the most recent of any
+// status. Without preferring Active, an older listing that was still
+// sending emails could be skipped in favor of a newer one already closed.
+// direction ("Donate"/"Receive"), when given, keeps someone with both a
+// donation and a request for the same item from closing the wrong one.
+// -1 if none.
+function findOptOutRowIndex(data, email, itemType, direction) {
+  let latest = -1;
   for (let i = data.length - 1; i >= 1; i--) {
     const row = data[i];
-    if (normalize(row[colIndex("email")]) === normalize(email) &&
-      normalize(row[colIndex("item_type")]) === normalize(itemType)) {
-      return { sheet: sheet, row: row, rowIndex: i + 1 };
-    }
+    if (direction && row[colIndex("donate_or_receive")] !== direction) continue;
+    if (normalize(row[colIndex("email")]) !== normalize(email)) continue;
+    if (normalize(row[colIndex("item_type")]) !== normalize(itemType)) continue;
+    if (row[colIndex("opt_out_status")] === OPT_OUT_ACTIVE) return i;
+    if (latest === -1) latest = i;
   }
-  return null;
+  return latest;
 }
 
 // Shared by OptOutServer.js's generic opt-out page and this file's own

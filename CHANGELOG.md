@@ -24,6 +24,13 @@ in the README for how versions map to git tags and Apps Script deployments.
   and warnings skip that person and carry on (`Matching.js`'s
   `sendEmailSafely`). Before, everyone after them got nothing, and a new
   submitter saw "Server error" even though their listing had been saved.
+- The token-less opt-out page (`?view=optout`) now closes the person's most
+  recent active listing in the direction they picked
+  (`PortalServer.js`'s `findOptOutRowIndex`). It used to take the most
+  recent row for that email and item regardless of direction or status, so
+  it could re-close an already-closed listing, or their request instead of
+  their donation, and confirm success while the live listing kept sending
+  emails.
 
 ### Added
 - Duplicate submissions: when someone resubmits a listing with exactly the
