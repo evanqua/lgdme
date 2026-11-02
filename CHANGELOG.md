@@ -19,6 +19,15 @@ in the README for how versions map to git tags and Apps Script deployments.
 - Analytics page text simplified and em dashes removed.
 
 ### Fixed
+- A listing renewed from the portal ("Yes, still looking") no longer gets an
+  "expires in 7 days" warning right after renewing and then expires with no
+  warning at all. `dailySubmissionMaintenance` now times nudges, the warning
+  and expiry from the current active period (`Triggers.js`'s
+  `activePeriodAgeInDays`, counted back from `notification_expiry`), which
+  for a listing never renewed is the same as before. The warning email now
+  links to the portal to renew instead of asking people to resubmit, and the
+  portal's "Still looking?" card shows from the first nudge (day 20 of 60,
+  not day 30) and hides again after a renewal.
 - One email that fails to send (a bad or dead address) no longer stops the
   rest of a run. New-match alerts and `dailySubmissionMaintenance`'s nudges
   and warnings skip that person and carry on (`Matching.js`'s

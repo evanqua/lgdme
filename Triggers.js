@@ -20,7 +20,7 @@ function dailySubmissionMaintenance() {
     const row = data[i];
     if (row[colIndex("opt_out_status")] !== OPT_OUT_ACTIVE) continue;
 
-    const ageInDays = Math.floor((now - new Date(row[colIndex("timestamp")])) / (1000 * 60 * 60 * 24));
+    const ageInDays = activePeriodAgeInDays(row, now, expirationDays);
 
     if (ageInDays > expirationDays) {
       setOptOutStatus(sheet, i + 1, OPT_OUT_EXPIRED);
@@ -53,17 +53,37 @@ function currentMatchCountFor(row, data) {
   return findActiveMatches(data, itemType, targetDirection).length;
 }
 
+// Days into the listing's current active period, which the nudges, the
+// 7-day warning and expiry are all timed from. A portal "still looking"
+// renewal (PortalServer.js's portalStaleResponse) only pushes
+// notification_expiry forward, never timestamp, so this counts back from
+// notification_expiry: for a row never renewed that's exactly its
+// timestamp (submission sets expiry to timestamp + the window), and for a
+// renewed one it's the renewal, so the schedule starts over from there
+// instead of warning them right after they renewed and then expiring them
+// with no warning. Falls back to timestamp for a row with no expiry.
+function activePeriodAgeInDays(row, now, expirationDays) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const expiry = row[colIndex("notification_expiry")];
+  const start = expiry
+    ? new Date(expiry).getTime() - expirationDays * dayMs
+    : new Date(row[colIndex("timestamp")]).getTime();
+  return Math.floor((now - start) / dayMs);
+}
+
+// Points at the portal's "Yes, still looking" renewal rather than the intake
+// form: renewing keeps the same listing, token and match history, where
+// resubmitting creates a second row.
 function sendExpiringSoonEmail(row, data) {
   const label = itemLabel(row);
-  const intakeFormUrl = getIntakeFormUrl();
-  const optOutUrl = ScriptApp.getService().getUrl() + "?token=" + row[colIndex("token")];
+  const portalUrl = ScriptApp.getService().getUrl() + "?token=" + row[colIndex("token")];
   const matchCount = currentMatchCountFor(row, data);
   const subject = `Action needed: your ${label} listing expires in 7 days`;
   const body = `<p>Hello ${row[colIndex("first_name")]},</p>
                 <p>Your listing for <b>${label}</b> expires in 7 days.</p>
                 <p>There ${matchCount === 1 ? "is" : "are"} currently <b>${matchCount}</b> active ${matchCount === 1 ? "match" : "matches"} for it.</p>
-                <p>To keep appearing in the system, please resubmit here: <a href="${intakeFormUrl}">${intakeFormUrl}</a></p>
-                <hr><p style="color:gray;font-size:12px;"><a href="${optOutUrl}">Opt Out Form</a></p>
+                <p>To keep it active, <a href="${portalUrl}">visit your listing</a> and choose "Yes, still looking".</p>
+                <hr><p style="color:gray;font-size:12px;"><a href="${portalUrl}">Opt Out Form</a></p>
                 <p>${getOrgName()}</p>`;
   MailApp.sendEmail({ to: row[colIndex("email")], subject: subject, htmlBody: body });
 }

@@ -186,9 +186,13 @@ function buildPortalViewModel(token) {
 
   const now = new Date();
   const ageInDays = Math.floor((now - new Date(row[colIndex("timestamp")])) / (1000 * 60 * 60 * 24));
-  const staleCheckDays = [30, 60, 90];
+  // The "Still looking?" renewal card shows from the first "still looking?"
+  // nudge onward (Triggers.js), since that email and the expiring-soon
+  // warning both send people here to renew. Timed from the current active
+  // period, so it hides again after a renewal.
+  const expirationDays = getExpirationDays();
   const isStale = row[colIndex("opt_out_status")] === OPT_OUT_ACTIVE &&
-    staleCheckDays.some(d => ageInDays >= d);
+    activePeriodAgeInDays(row, now, expirationDays) >= Math.round(expirationDays / 3);
 
   return {
     found: true,
