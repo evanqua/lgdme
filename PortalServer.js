@@ -9,7 +9,10 @@ function findSubmissionByToken(token) {
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     if (data[i][colIndex("token")] === token) {
-      return { sheet: sheet, row: data[i], rowIndex: i + 1, data: data };
+      // A link from before the listing was replaced by an identical
+      // resubmission (Duplicates.js) opens and acts on the replacement.
+      const live = liveRowIndexFrom(data, i);
+      return { sheet: sheet, row: data[live], rowIndex: live + 1, data: data };
     }
   }
   return null;
@@ -75,17 +78,17 @@ function resolveMatchedSubmissionAndNotify(matchedSubmissionId, notifierIdentifi
 function optOutSubmissionsMatchedPartyAndNotify(submissionId, notifierIdentifier, itemName) {
   const sheet = getOrCreateSubmissionsSheet();
   const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    if (row[colIndex("submission_id")] !== submissionId) continue;
-    if (row[colIndex("opt_out_status")] !== OPT_OUT_OPTED_OUT) {
-      setOptOutStatus(sheet, i + 1, OPT_OUT_OPTED_OUT);
-      sheet.getRange(i + 1, colIndex("successful_match") + 1).setValue("Yes");
-      sendPartnerOptOutNotification(row[colIndex("email")], row[colIndex("first_name")], notifierIdentifier, itemName);
-    }
-    return true;
+  // If they named a listing that has since been replaced by an identical
+  // resubmission (Duplicates.js), the replacement is the one still open.
+  const i = liveRowIndex(data, submissionId);
+  if (i === -1) return false;
+  const row = data[i];
+  if (row[colIndex("opt_out_status")] !== OPT_OUT_OPTED_OUT) {
+    setOptOutStatus(sheet, i + 1, OPT_OUT_OPTED_OUT);
+    sheet.getRange(i + 1, colIndex("successful_match") + 1).setValue("Yes");
+    sendPartnerOptOutNotification(row[colIndex("email")], row[colIndex("first_name")], notifierIdentifier, itemName);
   }
-  return false;
+  return true;
 }
 
 // Notifies a matched partner that the person they were matched with has been
@@ -160,7 +163,7 @@ function buildPortalViewModel(token) {
   const row = found.row;
   const direction = row[colIndex("donate_or_receive")];
 
-  const notifiedParties = notifiedPartiesFor(row[colIndex("submission_id")]);
+  const notifiedParties = liveNotifiedPartiesFor(row[colIndex("submission_id")]);
 
   const now = new Date();
   const ageInDays = Math.floor((now - new Date(row[colIndex("timestamp")])) / (1000 * 60 * 60 * 24));
@@ -204,6 +207,24 @@ function notifiedPartiesFor(submissionId) {
     const label = matchedRow ? submissionMatchLabel(matchedRow) : row[matchLogColIndex("matched_email")];
     parties.push({ submissionId: matchedId, label: label });
   }
+  return parties;
+}
+
+// notifiedPartiesFor, with anyone whose listing was replaced by an identical
+// resubmission (Duplicates.js) offered once, as the replacement.
+function liveNotifiedPartiesFor(submissionId) {
+  const data = getOrCreateSubmissionsSheet().getDataRange().getValues();
+  const parties = [];
+  const seen = {};
+  notifiedPartiesFor(submissionId).forEach(p => {
+    const live = liveRowIndex(data, p.submissionId);
+    const party = live === -1 || data[live][colIndex("submission_id")] === p.submissionId
+      ? p
+      : { submissionId: data[live][colIndex("submission_id")], label: submissionMatchLabel(data[live]) };
+    if (seen[party.submissionId]) return;
+    seen[party.submissionId] = true;
+    parties.push(party);
+  });
   return parties;
 }
 

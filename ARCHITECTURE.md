@@ -57,6 +57,7 @@ Form submissions from the intake form do not go through a normal HTTP POST. `Int
 | `SiteConfig.js` | `ITEM_CATEGORIES` and `SERVICE_AREA_CITIES`, the two adopter-editable content lists. |
 | `ItemConfig.js` | `ITEM_FIELD_DEFS`, the per-category donate and receive field definitions, paired with `ITEM_CATEGORIES` by array position. `getItemConfig()` builds the combined lookup and validates the two lists agree on length. |
 | `Matching.js` | The matching predicate (`findActiveMatches`), the two notification email builders (`sendSubmitterEmail`, `sendMatchAlertEmail`), and `MatchLog` writes. |
+| `Duplicates.js` | Closes an older listing as `Duplicate` when the same person resubmits it unchanged, and resolves references to a `Duplicate` row to the row that replaced it (see `SCHEMA.md`'s duplicate rule). |
 | `PortalServer.js` | Backend for the token-based self-service portal: report a match outcome, report no match, confirm receipt, renew a stale listing, optional feedback. |
 | `OptOutServer.js` | Backend for the token-less opt-out page, for someone without a handy notification email. |
 | `HomeServer.js` | Builds the public home page's view model (category status, all-time exchange/open-request totals) and the internal analytics view model (the two bar charts, `?view=analytics`, unlinked). Deliberately withholds exact counts and individual listings from the public version. |

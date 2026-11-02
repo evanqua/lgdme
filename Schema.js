@@ -6,6 +6,10 @@ const SUBMISSIONS_SHEET = "Submissions";
 const OPT_OUT_ACTIVE = "Active";
 const OPT_OUT_OPTED_OUT = "Opted Out";
 const OPT_OUT_EXPIRED = "Expired";
+// Replaced by a newer, identical submission from the same person (see
+// Duplicates.js). Like Opted Out/Expired, it drops out of everything that
+// only looks at Active rows.
+const OPT_OUT_DUPLICATE = "Duplicate";
 
 // Sentinel value for the "who did you match with?" dropdowns (Portal.html,
 // OptOut.html) when the reporter can't identify who it was. Shared across

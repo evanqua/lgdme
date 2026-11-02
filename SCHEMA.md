@@ -23,7 +23,7 @@ One row per donate-or-receive listing. Append-only in spirit: rows are updated i
 | `item_type` | string | Must be a key in the `item_config` structure below. |
 | `details_json` | JSON object | Item-type-specific answers, keyed by field id (see `item_config`). Free-form beyond that: no separate schema to keep in sync when `item_config` changes. |
 | `photo_urls` | string | Comma-separated URLs to uploaded photos (publicly viewable links). |
-| `opt_out_status` | enum: `Active` \| `Opted Out` \| `Expired` | `Active` is the only status that participates in matching or counts toward landing-page availability. |
+| `opt_out_status` | enum: `Active` \| `Opted Out` \| `Expired` \| `Duplicate` | `Active` is the only status that participates in matching or counts toward landing-page availability. `Duplicate` means a newer, identical submission replaced this row (see below). |
 | `notification_consent` | boolean | Whether this submitter wants "new match" emails for as long as their listing is active. |
 | `notification_expiry` | datetime | After this date, matching notification emails stop even if `opt_out_status` is still `Active` (resubmitting renews it). |
 | `notification_count` | integer | How many "new match" emails this row has triggered. Also the primary signal used by the unresponsive-listing audit flag. |
@@ -31,6 +31,8 @@ One row per donate-or-receive listing. Append-only in spirit: rows are updated i
 | `successful_match` | string | Set when the submitter reports (or the recipient confirms) which `submission_id` they matched with. Cross-checked against `match_log` by the audit pass. |
 
 **Matching rule**: two rows match if `item_type` is equal, `donate_or_receive` is opposite, both are `Active`, and neither's `notification_expiry` has passed.
+
+**Duplicate rule**: when a new submission matches an existing `Active`, unexpired row on every column that describes the person or the item (everything except row identity, photos, consent checkboxes, counters, status and outcome; currently `email`, `first_name`, `last_name`, `city`, `phone` by digits only, `donate_or_receive`, `item_type`, and `details_json` by its non-blank answers), ignoring case and extra whitespace, the older row becomes `Duplicate`. Nothing records which row replaced it: the replacement is the first later row with the same values that isn't itself `Duplicate`. A reference to a `Duplicate` row (an old portal link, a `match_log` entry, a reported match) resolves to that replacement. People already sent the old row in a notification aren't alerted again about the new one, and analytics counts each listing once.
 
 ## `match_log`
 

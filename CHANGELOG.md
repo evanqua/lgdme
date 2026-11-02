@@ -19,6 +19,14 @@ in the README for how versions map to git tags and Apps Script deployments.
 - Analytics page text simplified and em dashes removed.
 
 ### Added
+- Duplicate submissions: when someone resubmits a listing with exactly the
+  same contact and item details while the old one is still active, the old
+  row is closed with the new `Duplicate` status (`Duplicates.js`). Only the
+  new row appears in match tables, alerts, nudges and counts. Recipients who
+  were already sent the old listing aren't alerted again. Old portal links,
+  match dropdowns, partner opt-outs and the audit pass resolve the old row to
+  its replacement, and the submitter's confirmation email notes the
+  replacement. No new sheet column.
 - Opt-out page: someone who opted out saying they did not know who they
   matched with stays in the "who did you match with" list for 14 more days
   (`OptOutServer.js`'s `findRecentlyClosedUnsureMatches`), so the other party

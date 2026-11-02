@@ -6,16 +6,28 @@
 
 function processNewSubmission(sheet, newRow) {
   const data = sheet.getDataRange().getValues();
+  // Normally the last row, but another submission may have been appended
+  // since this one was.
+  const newSubmissionId = newRow[colIndex("submission_id")];
+  let newRowIndex = data.length - 1;
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][colIndex("submission_id")] === newSubmissionId) { newRowIndex = i; break; }
+  }
+
+  // Closes the submitter's older identical listing, if any (Duplicates.js),
+  // before matching runs, so it's left out of every email below.
+  const replacedCount = replaceDuplicateSubmissions(sheet, data, newRowIndex);
+
   const itemType = newRow[colIndex("item_type")];
   const newDirection = newRow[colIndex("donate_or_receive")];
   const targetDirection = newDirection === "Donate" ? "Receive" : "Donate";
 
   const matchesForSubmitter = findActiveMatches(data, itemType, targetDirection);
-  sheet.getRange(data.length, colIndex("initial_match_count") + 1).setValue(matchesForSubmitter.length);
+  sheet.getRange(newRowIndex + 1, colIndex("initial_match_count") + 1).setValue(matchesForSubmitter.length);
 
-  sendSubmitterEmail(newRow, matchesForSubmitter);
+  sendSubmitterEmail(newRow, matchesForSubmitter, replacedCount > 0);
   logMatchesForRecipient(newRow, matchesForSubmitter, "initial");
-  notifyExistingSubscribers(sheet, data, newRow);
+  notifyExistingSubscribers(sheet, data, newRow, replacedSubmissionIds(data, newRowIndex));
 
   return { matchCount: matchesForSubmitter.length };
 }
@@ -35,12 +47,20 @@ function findActiveMatches(data, itemType, direction) {
   return matches;
 }
 
-function notifyExistingSubscribers(sheet, data, newRow) {
+// replacedIds: the listings newRow replaced as an identical resubmission
+// (Duplicates.js's replacedSubmissionIds). Optional; empty for an ordinary
+// new submission.
+function notifyExistingSubscribers(sheet, data, newRow, replacedIds) {
   const itemType = newRow[colIndex("item_type")];
   const newDirection = newRow[colIndex("donate_or_receive")];
   const subscriberDirection = newDirection === "Donate" ? "Receive" : "Donate";
   const newSubmissionId = newRow[colIndex("submission_id")];
   const now = new Date();
+  // Anyone already sent the listing this one replaced has nothing new to
+  // hear about. Everyone else is alerted as usual.
+  const alreadyShown = replacedIds && replacedIds.length
+    ? recipientsShownAny(getOrCreateMatchLogSheet().getDataRange().getValues(), replacedIds)
+    : {};
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -51,6 +71,7 @@ function notifyExistingSubscribers(sheet, data, newRow) {
     if (!row[colIndex("notification_consent")]) continue;
     const expiryVal = row[colIndex("notification_expiry")];
     if (expiryVal && new Date(expiryVal) < now) continue;
+    if (alreadyShown[row[colIndex("submission_id")]]) continue;
 
     const theirMatches = findActiveMatches(data, itemType, newDirection);
     sendMatchAlertEmail(row, theirMatches, newSubmissionId);
@@ -147,13 +168,18 @@ function generateMatchTable(rows, highlightSubmissionId) {
   return table + "</table>";
 }
 
-function sendSubmitterEmail(newRow, matches) {
+// replacedEarlier: this submission closed an identical earlier listing of
+// theirs (Duplicates.js).
+function sendSubmitterEmail(newRow, matches, replacedEarlier) {
   const email = newRow[colIndex("email")];
   const name = newRow[colIndex("first_name")];
   const label = itemLabel(newRow);
   const optOutUrl = ScriptApp.getService().getUrl() + "?token=" + newRow[colIndex("token")];
   const subject = matches.length ? `Matches found for your ${label}` : `No current matches for your ${label} yet`;
   let body = `<p>Hello ${name},</p>`;
+  if (replacedEarlier) {
+    body += `<p>This replaces your earlier <b>${label}</b> listing with the same details, so from now on you'll only hear about this one.</p>`;
+  }
   if (matches.length) {
     body += `<p>We found matches for your <b>${label}</b>:</p>
     <p>If you would like to remove your listing and opt out of future communications, please follow <a href="${optOutUrl}">this link</a>.</p>${generateMatchTable(matches, null)}`;

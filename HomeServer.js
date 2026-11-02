@@ -510,6 +510,8 @@ function buildMonthlyTotalChart(data, months) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (row[colIndex("donate_or_receive")] !== "Donate") continue;
+    // Already counted as the identical resubmission that replaced it (Duplicates.js).
+    if (row[colIndex("opt_out_status")] === OPT_OUT_DUPLICATE) continue;
     const idx = months.findIndex(m => m.key === monthKey(new Date(row[colIndex("timestamp")])));
     if (idx !== -1) counts[idx]++;
   }
@@ -541,8 +543,10 @@ function directionTotals(data, direction) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (direction && row[colIndex("donate_or_receive")] !== direction) continue;
-    total++;
     const status = row[colIndex("opt_out_status")];
+    // Already counted as the identical resubmission that replaced it (Duplicates.js).
+    if (status === OPT_OUT_DUPLICATE) continue;
+    total++;
     if (status === OPT_OUT_ACTIVE) {
       active++;
     } else if (status === OPT_OUT_EXPIRED) {

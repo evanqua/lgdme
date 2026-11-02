@@ -122,11 +122,13 @@ function auditNewSystemFlags() {
     }
 
     // (b) reported match outcome doesn't correspond to anyone MatchLog shows
-    // was actually notified about this submission
+    // was actually notified about this submission. Being sent a listing
+    // counts as being sent whatever replaced it as an identical resubmission
+    // (Duplicates.js), since the portal offers the replacement in its place.
     const successfulMatch = row[colIndex("successful_match")];
     if (status === OPT_OUT_OPTED_OUT && looksLikeToken(successfulMatch)) {
       const wasNotifiedAboutThem = notifiedPartiesFor(submissionId)
-        .some(p => p.submissionId === successfulMatch);
+        .some(p => p.submissionId === successfulMatch || liveSubmissionId(data, p.submissionId) === successfulMatch);
       if (!wasNotifiedAboutThem) {
         flags.push([now, submissionId, "unverified_match_outcome",
           `Reported match with "${successfulMatch}" but MatchLog shows no notification linking them.`]);
