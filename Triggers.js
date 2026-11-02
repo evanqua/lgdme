@@ -31,12 +31,14 @@ function dailySubmissionMaintenance() {
     // submitter to resubmit rather than just "still looking?" - this is the
     // last chance to act before the listing flips to Expired. Fires
     // alongside the 1/3 and 2/3 nudges below rather than replacing them.
+    // sendEmailSafely (Matching.js) so one bad address doesn't stop the
+    // sweep before it reaches the rows below it.
     if (ageInDays === expirationDays - 7) {
-      sendExpiringSoonEmail(row, data);
+      sendEmailSafely(`Expiring-soon warning to row ${i + 1}`, () => sendExpiringSoonEmail(row, data));
     }
 
     if (nudgeDays.indexOf(ageInDays) !== -1) {
-      sendStaleNudgeEmail(row, data);
+      sendEmailSafely(`Still-looking nudge to row ${i + 1}`, () => sendStaleNudgeEmail(row, data));
     }
   }
 }

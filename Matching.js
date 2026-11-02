@@ -74,11 +74,26 @@ function notifyExistingSubscribers(sheet, data, newRow, replacedIds) {
     if (alreadyShown[row[colIndex("submission_id")]]) continue;
 
     const theirMatches = findActiveMatches(data, itemType, newDirection);
-    sendMatchAlertEmail(row, theirMatches, newSubmissionId);
+    // Not logged or counted if it didn't go out, since they weren't shown anything.
+    if (!sendEmailSafely(`Match alert to row ${i + 1}`, () => sendMatchAlertEmail(row, theirMatches, newSubmissionId))) continue;
     logMatchesForRecipient(row, theirMatches, "new_match_alert");
 
     const count = (parseInt(row[colIndex("notification_count")], 10) || 0) + 1;
     sheet.getRange(i + 1, colIndex("notification_count") + 1).setValue(count);
+  }
+}
+
+// One bad address (a typo, or a mailbox that no longer exists) shouldn't
+// stop a loop that emails many people partway through. Logs the failure
+// and returns false instead of throwing. Shared by notifyExistingSubscribers
+// above and Triggers.js's dailySubmissionMaintenance.
+function sendEmailSafely(description, send) {
+  try {
+    send();
+    return true;
+  } catch (err) {
+    console.error(`${description}: email failed (${err && err.message ? err.message : err})`);
+    return false;
   }
 }
 

@@ -18,6 +18,13 @@ in the README for how versions map to git tags and Apps Script deployments.
 ### Changed
 - Analytics page text simplified and em dashes removed.
 
+### Fixed
+- One email that fails to send (a bad or dead address) no longer stops the
+  rest of a run. New-match alerts and `dailySubmissionMaintenance`'s nudges
+  and warnings skip that person and carry on (`Matching.js`'s
+  `sendEmailSafely`). Before, everyone after them got nothing, and a new
+  submitter saw "Server error" even though their listing had been saved.
+
 ### Added
 - Duplicate submissions: when someone resubmits a listing with exactly the
   same contact and item details while the old one is still active, the old
