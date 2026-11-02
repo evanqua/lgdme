@@ -85,9 +85,9 @@ function resolveMatchedSubmissionAndNotify(matchedSubmissionId, notifierIdentifi
 }
 
 // Opts out the reported matched party's own Submissions row (unless already
-// opted out) and emails them that they've been opted out on someone else's
-// behalf, with a "reply to the contact email if this is a mistake" note
-// (sendPartnerOptOutNotification, below).
+// opted out) and, if it was still Active, emails them that they've been
+// opted out on someone else's behalf, with a "reply to the contact email if
+// this is a mistake" note (sendPartnerOptOutNotification, below).
 function optOutSubmissionsMatchedPartyAndNotify(submissionId, notifierIdentifier, itemName) {
   const sheet = getOrCreateSubmissionsSheet();
   const data = sheet.getDataRange().getValues();
@@ -96,10 +96,16 @@ function optOutSubmissionsMatchedPartyAndNotify(submissionId, notifierIdentifier
   const i = liveRowIndex(data, submissionId);
   if (i === -1) return false;
   const row = data[i];
-  if (row[colIndex("opt_out_status")] !== OPT_OUT_OPTED_OUT) {
+  const status = row[colIndex("opt_out_status")];
+  if (status !== OPT_OUT_OPTED_OUT) {
     setOptOutStatus(sheet, i + 1, OPT_OUT_OPTED_OUT);
     sheet.getRange(i + 1, colIndex("successful_match") + 1).setValue("Yes");
-    sendPartnerOptOutNotification(row[colIndex("email")], row[colIndex("first_name")], notifierIdentifier, itemName);
+    // An expired listing still gets the match recorded (analytics counts
+    // it), but its owner was already warned it would end, so "you've been opted
+    // out" would only confuse them.
+    if (status === OPT_OUT_ACTIVE) {
+      sendPartnerOptOutNotification(row[colIndex("email")], row[colIndex("first_name")], notifierIdentifier, itemName);
+    }
   }
   return true;
 }

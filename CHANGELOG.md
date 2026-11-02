@@ -31,6 +31,9 @@ in the README for how versions map to git tags and Apps Script deployments.
   it could re-close an already-closed listing, or their request instead of
   their donation, and confirm success while the live listing kept sending
   emails.
+- Naming a match whose listing had already expired no longer emails them
+  "you have been opted out". The match is still recorded on their row, so
+  analytics are unchanged.
 
 ### Added
 - Duplicate submissions: when someone resubmits a listing with exactly the
